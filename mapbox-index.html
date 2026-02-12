@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>CSBP Underground Services - Mapbox GL</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    
+    <!-- Mapbox GL JS -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
+    
+    <!-- Mapbox GL Geocoder (search) -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
+    <link rel="stylesheet" href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css" type="text/css">
+    
+    <style>
+        body { margin: 0; padding: 0; }
+        #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+        
+        /* Layer control panel */
+        #layer-control {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            max-height: 80vh;
+            overflow-y: auto;
+            min-width: 250px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+        }
+        
+        #layer-control h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            border-bottom: 2px solid #0080ff;
+            padding-bottom: 5px;
+        }
+        
+        .layer-group {
+            margin-bottom: 15px;
+        }
+        
+        .layer-group-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            cursor: pointer;
+            padding: 5px;
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+        
+        .layer-group-title:hover {
+            background: #e0e0e0;
+        }
+        
+        .layer-item {
+            margin: 5px 0 5px 20px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .layer-item input {
+            margin-right: 8px;
+        }
+        
+        .layer-item label {
+            cursor: pointer;
+            flex: 1;
+        }
+        
+        .color-indicator {
+            width: 20px;
+            height: 3px;
+            display: inline-block;
+            margin-right: 5px;
+            border-radius: 2px;
+        }
+        
+        /* Popup styling */
+        .mapboxgl-popup-content {
+            padding: 15px;
+            max-width: 300px;
+        }
+        
+        .mapboxgl-popup-content h4 {
+            margin: 0 0 10px 0;
+            color: #0080ff;
+        }
+        
+        .popup-row {
+            margin: 5px 0;
+            display: grid;
+            grid-template-columns: 120px 1fr;
+            gap: 10px;
+        }
+        
+        .popup-label {
+            font-weight: bold;
+            color: #666;
+        }
+        
+        .popup-value {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+
+<div id='layer-control'>
+    <h3>Layers</h3>
+    <div id='layer-list'></div>
+</div>
+
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoicHJvZ3Jlc3NpdmVzcGF0aWFsMDEiLCJhIjoiY21saXk2ajY4MDd4NjNlbzk1aHh3ZWcxOCJ9.RvuZXciIFtGqGzwXiZnmbw';
+    
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        center: [115.774, -32.242],
+        zoom: 16,
+        pitch: 0,
+        bearing: 0
+    });
+    
+    // Add navigation controls
+    map.addControl(new mapboxgl.NavigationControl());
+    
+    // Add geolocate control
+    map.addControl(new mapboxgl.GeolocateControl({
+        positionOptions: {
+            enableHighAccuracy: true
+        },
+        trackUserLocation: true,
+        showUserHeading: true
+    }));
+    
+    // Add search
+    map.addControl(
+        new MapboxGeocoder({
+            accessToken: mapboxgl.accessToken,
+            mapboxgl: mapboxgl,
+            marker: false
+        })
+    );
+    
+    // Add scale
+    map.addControl(new mapboxgl.ScaleControl({
+        maxWidth: 200,
+        unit: 'metric'
+    }));
+    
+    // Layer configuration
+    const layerConfig = {
+        'CSBP DBYD Services': {
+            layers: [
+                {
+                    name: 'ASB Communications',
+                    file: 'data/CSPBUGServicesAsbuiltASBSERVICESCommunications_4.js',
+                    color: '#FF1493',
+                    visible: true
+                },
+                {
+                    name: 'ASB Cooling Water',
+                    file: 'data/CSPBUGServicesAsbuiltASBSERVICESCoolingWater_1.js',
+                    color: '#00CED1',
+                    visible: true
+                },
+                {
+                    name: 'ASB Power',
+                    file: 'data/CSPBUGServicesAsbuiltASBSERVICESPower_2.js',
+                    color: '#FF0000',
+                    visible: true
+                },
+                {
+                    name: 'ASB Sewer',
+                    file: 'data/CSPBUGServicesAsbuiltASBSERVICESSewer_3.js',
+                    color: '#8B4513',
+                    visible: true
+                },
+                {
+                    name: 'ASB Stormwater',
+                    file: 'data/CSPBUGServicesAsbuiltASBSERVICESStormwater_5.js',
+                    color: '#87CEEB',
+                    visible: true
+                },
+                {
+                    name: 'LOC Abandoned Water',
+                    file: 'data/CSPBUGServicesLocatedLOCSERVICESAbandonedWater_6.js',
+                    color: '#808080',
+                    visible: true
+                },
+                {
+                    name: 'LOC Communications',
+                    file: 'data/CSPBUGServicesLocatedLOCSERVICESCommunications_7.js',
+                    color: '#FF1493',
+                    visible: true
+                },
+                {
+                    name: 'LOC Fire Suppression',
+                    file: 'data/CSPBUGServicesLocatedLOCSERVICESFireSuppression_8.js',
+                    color: '#DC143C',
+                    visible: true
+                },
+                {
+                    name: 'LOC Gas',
+                    file: 'data/CSPBUGServicesLocatedLOCSERVICESGas_9.js',
+                    color: '#FFA500',
+                    visible: true
+                },
+                {
+                    name: 'LOC Power',
+                    file: 'data/CSPBUGServicesLocatedLOCSERVICESPower_10.js',
+                    color: '#FF4500',
+                    visible: true
+                },
+                {
+                    name: 'LOC Steam',
+                    file: 'data/CSPBUGServicesLocatedLOCSERVICESSteam_11.js',
+                    color: '#FF69B4',
+                    visible: true
+                },
+                {
+                    name: 'LOC Stormwater',
+                    file: 'data/CSPBUGServicesLocatedLOCSERVICESStormwater_12.js',
+                    color: '#00BFFF',
+                    visible: true
+                },
+                {
+                    name: 'LOC Unknown',
+                    file: 'data/CSPBUGServicesLocatedLOCSERVICESUnknown_13.js',
+                    color: '#A9A9A9',
+                    visible: true
+                },
+                {
+                    name: 'LOC Water',
+                    file: 'data/CSPBUGServicesLocatedLOCSERVICESWater_14.js',
+                    color: '#1E90FF',
+                    visible: true
+                }
+            ]
+        }
+    };
+    
+    map.on('load', function() {
+        // Add drone imagery tiles
+        map.addSource('drone-tiles', {
+            'type': 'raster',
+            'tiles': ['tiles/{z}/{x}/{y}.jpg'],
+            'tileSize': 256,
+            'minzoom': 15,
+            'maxzoom': 20
+        });
+        
+        map.addLayer({
+            'id': 'drone-imagery',
+            'type': 'raster',
+            'source': 'drone-tiles',
+            'paint': {
+                'raster-opacity': 1
+            }
+        });
+        
+        // Load all service layers
+        Object.keys(layerConfig).forEach(groupName => {
+            const group = layerConfig[groupName];
+            
+            group.layers.forEach(layer => {
+                const layerId = layer.name.replace(/\s+/g, '-').toLowerCase();
+                
+                // Load the GeoJSON
+                fetch(layer.file)
+                    .then(response => response.text())
+                    .then(text => {
+                        // Extract JSON from the var declaration
+                        const jsonText = text.substring(text.indexOf('{'));
+                        const data = JSON.parse(jsonText);
+                        
+                        // Add source
+                        map.addSource(layerId, {
+                            'type': 'geojson',
+                            'data': data
+                        });
+                        
+                        // Add layer
+                        map.addLayer({
+                            'id': layerId,
+                            'type': 'line',
+                            'source': layerId,
+                            'layout': {
+                                'visibility': layer.visible ? 'visible' : 'none',
+                                'line-join': 'round',
+                                'line-cap': 'round'
+                            },
+                            'paint': {
+                                'line-color': layer.color,
+                                'line-width': 3
+                            }
+                        });
+                        
+                        // Add click handler for popups
+                        map.on('click', layerId, function(e) {
+                            const props = e.features[0].properties;
+                            
+                            let popupHTML = `<h4>${layer.name}</h4>`;
+                            
+                            if (props.ServiceAtt_Asset_Owner) {
+                                popupHTML += `<div class="popup-row"><span class="popup-label">Owner:</span><span class="popup-value">${props.ServiceAtt_Asset_Owner}</span></div>`;
+                            }
+                            if (props.ServiceAtt_Material) {
+                                popupHTML += `<div class="popup-row"><span class="popup-label">Material:</span><span class="popup-value">${props.ServiceAtt_Material}</span></div>`;
+                            }
+                            if (props.ServiceAtt_Size) {
+                                popupHTML += `<div class="popup-row"><span class="popup-label">Size:</span><span class="popup-value">${props.ServiceAtt_Size}</span></div>`;
+                            }
+                            if (props.ServiceAtt_SurveyType) {
+                                popupHTML += `<div class="popup-row"><span class="popup-label">Survey Type:</span><span class="popup-value">${props.ServiceAtt_SurveyType}</span></div>`;
+                            }
+                            if (props.ServiceAtt_Class) {
+                                popupHTML += `<div class="popup-row"><span class="popup-label">Class:</span><span class="popup-value">${props.ServiceAtt_Class}</span></div>`;
+                            }
+                            if (props.ServiceAtt_Locator) {
+                                popupHTML += `<div class="popup-row"><span class="popup-label">Locator:</span><span class="popup-value">${props.ServiceAtt_Locator}</span></div>`;
+                            }
+                            
+                            new mapboxgl.Popup()
+                                .setLngLat(e.lngLat)
+                                .setHTML(popupHTML)
+                                .addTo(map);
+                        });
+                        
+                        // Change cursor on hover
+                        map.on('mouseenter', layerId, function() {
+                            map.getCanvas().style.cursor = 'pointer';
+                        });
+                        
+                        map.on('mouseleave', layerId, function() {
+                            map.getCanvas().style.cursor = '';
+                        });
+                    })
+                    .catch(error => {
+                        console.error(`Error loading ${layer.name}:`, error);
+                    });
+            });
+        });
+        
+        // Build layer control
+        buildLayerControl();
+    });
+    
+    function buildLayerControl() {
+        const layerList = document.getElementById('layer-list');
+        
+        Object.keys(layerConfig).forEach(groupName => {
+            const group = layerConfig[groupName];
+            
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'layer-group';
+            
+            const groupTitle = document.createElement('div');
+            groupTitle.className = 'layer-group-title';
+            groupTitle.textContent = groupName;
+            groupDiv.appendChild(groupTitle);
+            
+            const groupLayers = document.createElement('div');
+            groupLayers.className = 'layer-group-layers';
+            
+            group.layers.forEach(layer => {
+                const layerId = layer.name.replace(/\s+/g, '-').toLowerCase();
+                
+                const layerDiv = document.createElement('div');
+                layerDiv.className = 'layer-item';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `toggle-${layerId}`;
+                checkbox.checked = layer.visible;
+                checkbox.addEventListener('change', function() {
+                    const visibility = this.checked ? 'visible' : 'none';
+                    if (map.getLayer(layerId)) {
+                        map.setLayoutProperty(layerId, 'visibility', visibility);
+                    }
+                });
+                
+                const label = document.createElement('label');
+                label.htmlFor = `toggle-${layerId}`;
+                
+                const colorIndicator = document.createElement('span');
+                colorIndicator.className = 'color-indicator';
+                colorIndicator.style.backgroundColor = layer.color;
+                
+                label.appendChild(colorIndicator);
+                label.appendChild(document.createTextNode(layer.name));
+                
+                layerDiv.appendChild(checkbox);
+                layerDiv.appendChild(label);
+                groupLayers.appendChild(layerDiv);
+            });
+            
+            groupDiv.appendChild(groupLayers);
+            layerList.appendChild(groupDiv);
+        });
+    }
+</script>
+
+</body>
+</html>
