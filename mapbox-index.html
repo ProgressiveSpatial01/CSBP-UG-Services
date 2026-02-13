@@ -17,21 +17,49 @@
         body { margin: 0; padding: 0; }
         #map { position: absolute; top: 0; bottom: 0; width: 100%; }
         
-        /* Layer control panel */
         #layer-control {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            max-height: 80vh;
-            overflow-y: auto;
-            min-width: 250px;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-        }
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    max-height: 80vh;
+    overflow-y: auto;
+    width: 280px;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    transition: transform 0.3s ease;
+    z-index: 1;
+}
+
+#layer-control.hidden {
+    transform: translateX(-300px);
+}
+
+#layer-toggle {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: white;
+    border: none;
+    padding: 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    cursor: pointer;
+    font-size: 20px;
+    z-index: 2;
+    transition: left 0.3s ease;
+}
+
+#layer-toggle.panel-open {
+    left: 300px;
+}
+
+#layer-toggle:hover {
+    background: #f0f0f0;
+}
         
         #layer-control h3 {
             margin: 0 0 10px 0;
@@ -106,20 +134,75 @@
         .popup-value {
             color: #333;
         }
+		
+#measure-control {
+    position: absolute;
+    top: 120px;
+    right: 10px;
+    background: white;
+    padding: 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+}
+
+#measure-control button {
+    padding: 8px 15px;
+    margin: 5px;
+    border: none;
+    background: #0080ff;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#measure-control button:hover {
+    background: #0060cc;
+}
+
+#measure-control button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+#measure-result {
+    margin-top: 10px;
+    font-weight: bold;
+    color: #333;
+}
     </style>
 </head>
 <body>
 
 <div id='map'></div>
 
+<button id='layer-toggle'>☰</button>
+
 <div id='layer-control'>
     <h3>Layers</h3>
     <div id='layer-list'></div>
+	<div id='measure-control'>
+    <button id='measure-start'>Measure Distance</button>
+    <button id='measure-clear' disabled>Clear</button>
+    <div id='measure-result'></div>
+</div
 </div>
 
 <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoicHJvZ3Jlc3NpdmVzcGF0aWFsMDEiLCJhIjoiY21saXk2ajY4MDd4NjNlbzk1aHh3ZWcxOCJ9.RvuZXciIFtGqGzwXiZnmbw';
     
+	// Layer panel toggle
+document.addEventListener('DOMContentLoaded', function() {
+    const toggle = document.getElementById('layer-toggle');
+    const panel = document.getElementById('layer-control');
+    
+    toggle.addEventListener('click', function() {
+        panel.classList.toggle('hidden');
+        toggle.classList.toggle('panel-open');
+        toggle.textContent = panel.classList.contains('hidden') ? '☰' : '✕';
+    });
+});
     const map = new mapboxgl.Map({
         container: 'map',
         style: 'mapbox://styles/mapbox/satellite-streets-v12',
@@ -133,13 +216,21 @@
     map.addControl(new mapboxgl.NavigationControl());
     
     // Add geolocate control
-    map.addControl(new mapboxgl.GeolocateControl({
-        positionOptions: {
-            enableHighAccuracy: true
-        },
-        trackUserLocation: true,
-        showUserHeading: true
-    }));
+    const geolocate = new mapboxgl.GeolocateControl({
+    positionOptions: {
+        enableHighAccuracy: true
+    },
+    trackUserLocation: true,
+    showUserHeading: true,
+    showAccuracyCircle: true
+});
+
+map.addControl(geolocate);
+
+// Make it toggle off when clicked again
+geolocate.on('geolocate', function() {
+    geolocate._watchState = 'OFF';
+});
     
     // Add search
     map.addControl(
@@ -251,12 +342,117 @@
     map.on('load', function() {
         // Add drone imagery tiles
         map.addSource('drone-tiles', {
-            'type': 'raster',
-            'tiles': ['tiles/{z}/{x}/{y}.jpg'],
-            'tileSize': 256,
-            'minzoom': 15,
-            'maxzoom': 20
-        });
+    'type': 'raster',
+    'tiles': ['tiles/{z}/{x}/{y}.jpg'],
+    'tileSize': 256,
+    'minzoom': 15,
+    'maxzoom': 20,
+    'bounds': [115.770, -32.243, 115.778, -32.240]
+});
+
+// Measurement tool
+let measurePoints = [];
+let measureLine = null;
+let measuring = false;
+
+document.getElementById('measure-start').addEventListener('click', function() {
+    measuring = !measuring;
+    this.textContent = measuring ? 'Click on Map' : 'Measure Distance';
+    this.style.background = measuring ? '#ff6600' : '#0080ff';
+    
+    if (!measuring) {
+        measurePoints = [];
+        if (measureLine) {
+            map.removeLayer('measure-line');
+            map.removeSource('measure-line');
+            measureLine = null;
+        }
+        document.getElementById('measure-result').textContent = '';
+        document.getElementById('measure-clear').disabled = true;
+    }
+});
+
+document.getElementById('measure-clear').addEventListener('click', function() {
+    measurePoints = [];
+    if (measureLine) {
+        map.removeLayer('measure-line');
+        map.removeSource('measure-line');
+        measureLine = null;
+    }
+    document.getElementById('measure-result').textContent = '';
+    this.disabled = true;
+    measuring = false;
+    document.getElementById('measure-start').textContent = 'Measure Distance';
+    document.getElementById('measure-start').style.background = '#0080ff';
+});
+
+map.on('click', function(e) {
+    if (!measuring) return;
+    
+    measurePoints.push([e.lngLat.lng, e.lngLat.lat]);
+    
+    if (measurePoints.length >= 2) {
+        // Calculate distance using turf.js formula
+        let totalDistance = 0;
+        for (let i = 0; i < measurePoints.length - 1; i++) {
+            const lon1 = measurePoints[i][0];
+            const lat1 = measurePoints[i][1];
+            const lon2 = measurePoints[i + 1][0];
+            const lat2 = measurePoints[i + 1][1];
+            
+            const R = 6371000; // Earth radius in meters
+            const φ1 = lat1 * Math.PI / 180;
+            const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180;
+            const Δλ = (lon2 - lon1) * Math.PI / 180;
+            
+            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                    Math.cos(φ1) * Math.cos(φ2) *
+                    Math.sin(Δλ/2) * Math.sin(Δλ/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            
+            totalDistance += R * c;
+        }
+        
+        // Update line
+        if (measureLine) {
+            map.getSource('measure-line').setData({
+                'type': 'Feature',
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': measurePoints
+                }
+            });
+        } else {
+            map.addSource('measure-line', {
+                'type': 'geojson',
+                'data': {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'LineString',
+                        'coordinates': measurePoints
+                    }
+                }
+            });
+            
+            map.addLayer({
+                'id': 'measure-line',
+                'type': 'line',
+                'source': 'measure-line',
+                'paint': {
+                    'line-color': '#ff0000',
+                    'line-width': 3,
+                    'line-dasharray': [2, 2]
+                }
+            });
+            
+            measureLine = true;
+        }
+        
+        document.getElementById('measure-result').textContent = `Distance: ${totalDistance.toFixed(3)} m`;
+        document.getElementById('measure-clear').disabled = false;
+    }
+});
         
         map.addLayer({
             'id': 'drone-imagery',
