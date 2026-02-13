@@ -99,6 +99,96 @@
             cursor: pointer;
             flex: 1;
         }
+		
+		.layer-group-title {
+    font-weight: bold;
+    margin-bottom: 5px;
+    cursor: pointer;
+    padding: 8px;
+    background: #f0f0f0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.layer-group-title:hover {
+    background: #e0e0e0;
+}
+
+.layer-group-title .toggle-icon {
+    font-size: 12px;
+    transition: transform 0.2s;
+}
+
+.layer-group-title.collapsed .toggle-icon {
+    transform: rotate(-90deg);
+}
+
+.layer-group-layers {
+    margin-left: 10px;
+    border-left: 2px solid #ddd;
+    padding-left: 10px;
+    margin-top: 5px;
+}
+
+.layer-group-layers.hidden {
+    display: none;
+}
+
+.subgroup {
+    margin: 10px 0;
+}
+
+.subgroup-title {
+    font-weight: 600;
+    cursor: pointer;
+    padding: 6px 8px;
+    background: #f8f8f8;
+    border-radius: 3px;
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+}
+
+.subgroup-title:hover {
+    background: #ececec;
+}
+
+.subgroup-title .toggle-icon {
+    font-size: 10px;
+    transition: transform 0.2s;
+}
+
+.subgroup-title.collapsed .toggle-icon {
+    transform: rotate(-90deg);
+}
+
+.subgroup-layers {
+    margin-left: 15px;
+    margin-top: 5px;
+}
+
+.subgroup-layers.hidden {
+    display: none;
+}
+
+.group-toggle-all {
+    font-size: 11px;
+    padding: 2px 8px;
+    background: #0080ff;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.group-toggle-all:hover {
+    background: #0060cc;
+}
         
         .color-indicator {
             width: 20px;
@@ -249,7 +339,7 @@ geolocate.on('geolocate', function() {
     
     // Layer configuration
     const layerConfig = {
-    'CSBP DBYD Services': {
+    'As-Built UG Services': {
         layers: [
             {
                 name: 'ASB Communications',
@@ -280,7 +370,11 @@ geolocate.on('geolocate', function() {
                 file: 'data/CSPBUGServicesAsbuiltASBSERVICESStormwater_5.js',
                 color: '#87CEEB',
                 visible: true
-            },
+            }
+        ]
+    },
+    'Located UG Services': {
+        layers: [
             {
                 name: 'LOC Abandoned Water',
                 file: 'data/CSPBUGServicesLocatedLOCSERVICESAbandonedWater_6.js',
@@ -337,265 +431,273 @@ geolocate.on('geolocate', function() {
             }
         ]
     },
-    'UG Water Services': {
+    'Design': {
         layers: [
-            {
-                name: 'UG Water Corp',
-                file: 'data/UGWaterCorp_29.js',
-                color: '#0066CC',
-                visible: false
-            },
-            {
-                name: 'UG Water Demin',
-                file: 'data/UGWaterDemin_28.js',
-                color: '#3399FF',
-                visible: false
-            },
-            {
-                name: 'UG Water KWRP',
-                file: 'data/UGWaterKWRP_27.js',
-                color: '#66B2FF',
-                visible: false
-            },
-            {
-                name: 'UG Water Permeate',
-                file: 'data/UGWaterPermeate_26.js',
-                color: '#99CCFF',
-                visible: false
-            },
-            {
-                name: 'UG Water Rain',
-                file: 'data/UGWaterRain_25.js',
-                color: '#00BFFF',
-                visible: false
-            },
-            {
-                name: 'UG Water Salt',
-                file: 'data/UGWaterSalt_24.js',
-                color: '#87CEEB',
-                visible: false
-            },
-            {
-                name: 'UG Water Scheme',
-                file: 'data/UGWaterScheme_23.js',
-                color: '#4682B4',
-                visible: false
-            },
-            {
-                name: 'UG Water Scheme Fire',
-                file: 'data/UGWaterSchemeFire_22.js',
-                color: '#5F9EA0',
-                visible: false
-            },
-            {
-                name: 'UG Water Waste',
-                file: 'data/UGWaterWaste_21.js',
-                color: '#708090',
-                visible: false
-            },
-            {
-                name: 'UG Water BP Fire',
-                file: 'data/UGWaterBPFire_30.js',
-                color: '#DC143C',
-                visible: false
-            },
-            {
-                name: 'UG Water Bore and Fire Hydrants',
-                file: 'data/UGWaterBoreandBoreFireHydrants_31.js',
-                color: '#B22222',
-                visible: false
-            }
-        ]
-    },
-    'UG Power & Comms': {
-        layers: [
-            {
-                name: 'UG Power HT',
-                file: 'data/UGPowerHT_39.js',
-                color: '#FF0000',
-                visible: false
-            },
-            {
-                name: 'UG Power LT',
-                file: 'data/UGPowerLT_38.js',
-                color: '#FF6347',
-                visible: false
-            },
-            {
-                name: 'UG Redundant Electrical',
-                file: 'data/UGRedundantElectrical_37.js',
-                color: '#FF4500',
-                visible: false
-            },
-            {
-                name: 'UG Portable Power Supply',
-                file: 'data/UGPortablePowerSupply_40.js',
-                color: '#FFA500',
-                visible: false
-            },
-            {
-                name: 'UG Communications',
-                file: 'data/UGCommunications_49.js',
-                color: '#32CD32',
-                visible: false
-            },
-            {
-                name: 'UG Telephone',
-                file: 'data/UGTelephone_32.js',
-                color: '#00FF00',
-                visible: false
-            },
-            {
-                name: 'UG Fibre Optic',
-                file: 'data/UGFibreOptic_45.js',
-                color: '#7FFF00',
-                visible: false
-            }
-        ]
-    },
-    'UG Gas & Air': {
-        layers: [
-            {
-                name: 'UG Gas Natural',
-                file: 'data/UGGasNatural_44.js',
-                color: '#FFD700',
-                visible: false
-            },
-            {
-                name: 'UG Hydrogen',
-                file: 'data/UGHydrogen_43.js',
-                color: '#FF69B4',
-                visible: false
-            },
-            {
-                name: 'UG Nitrogen',
-                file: 'data/UGNitrogen_42.js',
-                color: '#9370DB',
-                visible: false
-            },
-            {
-                name: 'UG Air Compressed',
-                file: 'data/UGAirCompressed_55.js',
-                color: '#87CEFA',
-                visible: false
-            },
-            {
-                name: 'UG Air Instrument',
-                file: 'data/UGAirInstrument_54.js',
-                color: '#B0E0E6',
-                visible: false
-            },
-            {
-                name: 'UG CO2',
-                file: 'data/UGCO2_50.js',
-                color: '#778899',
-                visible: false
-            }
-        ]
-    },
-    'UG Other Services': {
-        layers: [
-            {
-                name: 'UG Sewerage',
-                file: 'data/UGSewerage_34.js',
-                color: '#8B4513',
-                visible: false
-            },
-            {
-                name: 'UG Drains and Sumps',
-                file: 'data/UGDrainsandSumps_48.js',
-                color: '#A0522D',
-                visible: false
-            },
-            {
-                name: 'UG Reticulation',
-                file: 'data/UGReticulation_35.js',
-                color: '#D2691E',
-                visible: false
-            },
-            {
-                name: 'UG Redundant Pipe',
-                file: 'data/UGRedundantPipe_36.js',
-                color: '#CD853F',
-                visible: false
-            },
-            {
-                name: 'UG Oil',
-                file: 'data/UGOil_41.js',
-                color: '#8B0000',
-                visible: false
-            },
-            {
-                name: 'UG Sulphuric Acid',
-                file: 'data/UGSulphuricAcid_33.js',
-                color: '#FFFF00',
-                visible: false
-            },
-            {
-                name: 'UG Ammonia',
-                file: 'data/UGAmmonia_53.js',
-                color: '#00CED1',
-                visible: false
-            },
-            {
-                name: 'UG Effluent',
-                file: 'data/UGEffluent_46.js',
-                color: '#696969',
-                visible: false
-            },
-            {
-                name: 'UG Earthing Grid',
-                file: 'data/UGEarthingGrid_47.js',
-                color: '#FFD700',
-                visible: false
-            },
-            {
-                name: 'UG Bores',
-                file: 'data/UGBores_51.js',
-                color: '#4169E1',
-                visible: false
-            },
-            {
-                name: 'UG Argon',
-                file: 'data/UGArgon_52.js',
-                color: '#9932CC',
-                visible: false
-            }
-        ]
-    },
-    'Infrastructure': {
-        layers: [
-            {
-                name: 'UT Bench Mark',
-                file: 'data/UTBenchMark_20.js',
-                color: '#000000',
-                visible: false
-            },
-            {
-                name: 'UT Fence',
-                file: 'data/UTFence_19.js',
-                color: '#A9A9A9',
-                visible: false
-            },
-            {
-                name: 'UT Fire Water Test Locations',
-                file: 'data/UTFireWaterTestLocations_18.js',
-                color: '#FF0000',
-                visible: false
-            },
             {
                 name: '3rd Incinerator Concrete Outline',
                 file: 'data/3rdIncineratorConcreteOutline_0.js',
                 color: '#808080',
                 visible: false
-            },
-            {
-                name: 'Base',
-                file: 'data/Base_56.js',
-                color: '#D3D3D3',
-                visible: false
             }
         ]
+    },
+    'CSBP DBYD UG Services and Existing Infrastructure': {
+        subgroups: {
+            'UG Water Services': {
+                layers: [
+                    {
+                        name: 'UG Water Corp',
+                        file: 'data/UGWaterCorp_29.js',
+                        color: '#0066CC',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Water Demin',
+                        file: 'data/UGWaterDemin_28.js',
+                        color: '#3399FF',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Water KWRP',
+                        file: 'data/UGWaterKWRP_27.js',
+                        color: '#66B2FF',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Water Permeate',
+                        file: 'data/UGWaterPermeate_26.js',
+                        color: '#99CCFF',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Water Rain',
+                        file: 'data/UGWaterRain_25.js',
+                        color: '#00BFFF',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Water Salt',
+                        file: 'data/UGWaterSalt_24.js',
+                        color: '#87CEEB',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Water Scheme',
+                        file: 'data/UGWaterScheme_23.js',
+                        color: '#4682B4',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Water Scheme Fire',
+                        file: 'data/UGWaterSchemeFire_22.js',
+                        color: '#5F9EA0',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Water Waste',
+                        file: 'data/UGWaterWaste_21.js',
+                        color: '#708090',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Water BP Fire',
+                        file: 'data/UGWaterBPFire_30.js',
+                        color: '#DC143C',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Water Bore and Fire Hydrants',
+                        file: 'data/UGWaterBoreandBoreFireHydrants_31.js',
+                        color: '#B22222',
+                        visible: false
+                    }
+                ]
+            },
+            'UG Power & Comms': {
+                layers: [
+                    {
+                        name: 'UG Power HT',
+                        file: 'data/UGPowerHT_39.js',
+                        color: '#FF0000',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Power LT',
+                        file: 'data/UGPowerLT_38.js',
+                        color: '#FF6347',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Redundant Electrical',
+                        file: 'data/UGRedundantElectrical_37.js',
+                        color: '#FF4500',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Portable Power Supply',
+                        file: 'data/UGPortablePowerSupply_40.js',
+                        color: '#FFA500',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Communications',
+                        file: 'data/UGCommunications_49.js',
+                        color: '#32CD32',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Telephone',
+                        file: 'data/UGTelephone_32.js',
+                        color: '#00FF00',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Fibre Optic',
+                        file: 'data/UGFibreOptic_45.js',
+                        color: '#7FFF00',
+                        visible: false
+                    }
+                ]
+            },
+            'UG Gas & Air': {
+                layers: [
+                    {
+                        name: 'UG Gas Natural',
+                        file: 'data/UGGasNatural_44.js',
+                        color: '#FFD700',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Hydrogen',
+                        file: 'data/UGHydrogen_43.js',
+                        color: '#FF69B4',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Nitrogen',
+                        file: 'data/UGNitrogen_42.js',
+                        color: '#9370DB',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Air Compressed',
+                        file: 'data/UGAirCompressed_55.js',
+                        color: '#87CEFA',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Air Instrument',
+                        file: 'data/UGAirInstrument_54.js',
+                        color: '#B0E0E6',
+                        visible: false
+                    },
+                    {
+                        name: 'UG CO2',
+                        file: 'data/UGCO2_50.js',
+                        color: '#778899',
+                        visible: false
+                    }
+                ]
+            },
+            'UG Other Services': {
+                layers: [
+                    {
+                        name: 'UG Sewerage',
+                        file: 'data/UGSewerage_34.js',
+                        color: '#8B4513',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Drains and Sumps',
+                        file: 'data/UGDrainsandSumps_48.js',
+                        color: '#A0522D',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Reticulation',
+                        file: 'data/UGReticulation_35.js',
+                        color: '#D2691E',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Redundant Pipe',
+                        file: 'data/UGRedundantPipe_36.js',
+                        color: '#CD853F',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Oil',
+                        file: 'data/UGOil_41.js',
+                        color: '#8B0000',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Sulphuric Acid',
+                        file: 'data/UGSulphuricAcid_33.js',
+                        color: '#FFFF00',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Ammonia',
+                        file: 'data/UGAmmonia_53.js',
+                        color: '#00CED1',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Effluent',
+                        file: 'data/UGEffluent_46.js',
+                        color: '#696969',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Earthing Grid',
+                        file: 'data/UGEarthingGrid_47.js',
+                        color: '#FFD700',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Bores',
+                        file: 'data/UGBores_51.js',
+                        color: '#4169E1',
+                        visible: false
+                    },
+                    {
+                        name: 'UG Argon',
+                        file: 'data/UGArgon_52.js',
+                        color: '#9932CC',
+                        visible: false
+                    }
+                ]
+            },
+            'Infrastructure': {
+                layers: [
+                    {
+                        name: 'UT Bench Mark',
+                        file: 'data/UTBenchMark_20.js',
+                        color: '#000000',
+                        visible: false
+                    },
+                    {
+                        name: 'UT Fence',
+                        file: 'data/UTFence_19.js',
+                        color: '#A9A9A9',
+                        visible: false
+                    },
+                    {
+                        name: 'UT Fire Water Test Locations',
+                        file: 'data/UTFireWaterTestLocations_18.js',
+                        color: '#FF0000',
+                        visible: false
+                    },
+                    {
+                        name: 'Base',
+                        file: 'data/Base_56.js',
+                        color: '#D3D3D3',
+                        visible: false
+                    }
+                ]
+            }
+        }
     }
 };
     
@@ -811,58 +913,215 @@ map.on('click', function(e) {
     });
     
     function buildLayerControl() {
-        const layerList = document.getElementById('layer-list');
+    const layerList = document.getElementById('layer-list');
+    
+    Object.keys(layerConfig).forEach(groupName => {
+        const group = layerConfig[groupName];
         
-        Object.keys(layerConfig).forEach(groupName => {
-            const group = layerConfig[groupName];
-            
-            const groupDiv = document.createElement('div');
-            groupDiv.className = 'layer-group';
-            
-            const groupTitle = document.createElement('div');
-            groupTitle.className = 'layer-group-title';
-            groupTitle.textContent = groupName;
-            groupDiv.appendChild(groupTitle);
-            
-            const groupLayers = document.createElement('div');
-            groupLayers.className = 'layer-group-layers';
-            
-            group.layers.forEach(layer => {
-                const layerId = layer.name.replace(/\s+/g, '-').toLowerCase();
+        const groupDiv = document.createElement('div');
+        groupDiv.className = 'layer-group';
+        
+        const groupTitle = document.createElement('div');
+        groupTitle.className = 'layer-group-title';
+        
+        const titleText = document.createElement('span');
+        titleText.textContent = groupName;
+        
+        const toggleIcon = document.createElement('span');
+        toggleIcon.className = 'toggle-icon';
+        toggleIcon.textContent = '▼';
+        
+        const toggleAllBtn = document.createElement('button');
+        toggleAllBtn.className = 'group-toggle-all';
+        toggleAllBtn.textContent = 'All On/Off';
+        toggleAllBtn.onclick = function(e) {
+            e.stopPropagation();
+            toggleGroupLayers(groupName);
+        };
+        
+        groupTitle.appendChild(titleText);
+        groupTitle.appendChild(toggleAllBtn);
+        groupTitle.appendChild(toggleIcon);
+        
+        const groupLayers = document.createElement('div');
+        groupLayers.className = 'layer-group-layers';
+        
+        // Check if this group has subgroups
+        if (group.subgroups) {
+            Object.keys(group.subgroups).forEach(subgroupName => {
+                const subgroup = group.subgroups[subgroupName];
                 
-                const layerDiv = document.createElement('div');
-                layerDiv.className = 'layer-item';
+                const subgroupDiv = document.createElement('div');
+                subgroupDiv.className = 'subgroup';
                 
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.id = `toggle-${layerId}`;
-                checkbox.checked = layer.visible;
-                checkbox.addEventListener('change', function() {
-                    const visibility = this.checked ? 'visible' : 'none';
-                    if (map.getLayer(layerId)) {
-                        map.setLayoutProperty(layerId, 'visibility', visibility);
-                    }
+                const subgroupTitle = document.createElement('div');
+                subgroupTitle.className = 'subgroup-title collapsed';
+                
+                const subTitleText = document.createElement('span');
+                subTitleText.textContent = subgroupName;
+                
+                const subToggleIcon = document.createElement('span');
+                subToggleIcon.className = 'toggle-icon';
+                subToggleIcon.textContent = '▼';
+                
+                const subToggleAllBtn = document.createElement('button');
+                subToggleAllBtn.className = 'group-toggle-all';
+                subToggleAllBtn.textContent = 'All';
+                subToggleAllBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    toggleSubgroupLayers(groupName, subgroupName);
+                };
+                
+                subgroupTitle.appendChild(subTitleText);
+                subgroupTitle.appendChild(subToggleAllBtn);
+                subgroupTitle.appendChild(subToggleIcon);
+                
+                const subgroupLayers = document.createElement('div');
+                subgroupLayers.className = 'subgroup-layers hidden';
+                
+                subgroup.layers.forEach(layer => {
+                    addLayerToControl(subgroupLayers, layer);
                 });
                 
-                const label = document.createElement('label');
-                label.htmlFor = `toggle-${layerId}`;
+                subgroupTitle.onclick = function() {
+                    subgroupLayers.classList.toggle('hidden');
+                    subgroupTitle.classList.toggle('collapsed');
+                };
                 
-                const colorIndicator = document.createElement('span');
-                colorIndicator.className = 'color-indicator';
-                colorIndicator.style.backgroundColor = layer.color;
-                
-                label.appendChild(colorIndicator);
-                label.appendChild(document.createTextNode(layer.name));
-                
-                layerDiv.appendChild(checkbox);
-                layerDiv.appendChild(label);
-                groupLayers.appendChild(layerDiv);
+                subgroupDiv.appendChild(subgroupTitle);
+                subgroupDiv.appendChild(subgroupLayers);
+                groupLayers.appendChild(subgroupDiv);
             });
-            
-            groupDiv.appendChild(groupLayers);
-            layerList.appendChild(groupDiv);
+        } else if (group.layers) {
+            // No subgroups, just layers
+            group.layers.forEach(layer => {
+                addLayerToControl(groupLayers, layer);
+            });
+        }
+        
+        groupTitle.onclick = function() {
+            groupLayers.classList.toggle('hidden');
+            groupTitle.classList.toggle('collapsed');
+        };
+        
+        groupDiv.appendChild(groupTitle);
+        groupDiv.appendChild(groupLayers);
+        layerList.appendChild(groupDiv);
+    });
+}
+
+function addLayerToControl(container, layer) {
+    const layerId = layer.name.replace(/\s+/g, '-').toLowerCase();
+    
+    const layerDiv = document.createElement('div');
+    layerDiv.className = 'layer-item';
+    
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = `toggle-${layerId}`;
+    checkbox.checked = layer.visible;
+    checkbox.addEventListener('change', function() {
+        const visibility = this.checked ? 'visible' : 'none';
+        if (map.getLayer(layerId)) {
+            map.setLayoutProperty(layerId, 'visibility', visibility);
+        }
+    });
+    
+    const label = document.createElement('label');
+    label.htmlFor = `toggle-${layerId}`;
+    
+    const colorIndicator = document.createElement('span');
+    colorIndicator.className = 'color-indicator';
+    colorIndicator.style.backgroundColor = layer.color;
+    
+    label.appendChild(colorIndicator);
+    label.appendChild(document.createTextNode(layer.name));
+    
+    layerDiv.appendChild(checkbox);
+    layerDiv.appendChild(label);
+    container.appendChild(layerDiv);
+}
+
+function toggleGroupLayers(groupName) {
+    const group = layerConfig[groupName];
+    let allOn = true;
+    
+    // Check current state
+    const checkStates = [];
+    if (group.subgroups) {
+        Object.values(group.subgroups).forEach(subgroup => {
+            subgroup.layers.forEach(layer => {
+                const layerId = layer.name.replace(/\s+/g, '-').toLowerCase();
+                const checkbox = document.getElementById(`toggle-${layerId}`);
+                if (checkbox) checkStates.push(checkbox.checked);
+            });
+        });
+    } else if (group.layers) {
+        group.layers.forEach(layer => {
+            const layerId = layer.name.replace(/\s+/g, '-').toLowerCase();
+            const checkbox = document.getElementById(`toggle-${layerId}`);
+            if (checkbox) checkStates.push(checkbox.checked);
         });
     }
+    
+    allOn = checkStates.every(state => state === true);
+    const newState = !allOn;
+    
+    // Toggle all layers
+    if (group.subgroups) {
+        Object.values(group.subgroups).forEach(subgroup => {
+            subgroup.layers.forEach(layer => {
+                const layerId = layer.name.replace(/\s+/g, '-').toLowerCase();
+                const checkbox = document.getElementById(`toggle-${layerId}`);
+                if (checkbox) {
+                    checkbox.checked = newState;
+                    if (map.getLayer(layerId)) {
+                        map.setLayoutProperty(layerId, 'visibility', newState ? 'visible' : 'none');
+                    }
+                }
+            });
+        });
+    } else if (group.layers) {
+        group.layers.forEach(layer => {
+            const layerId = layer.name.replace(/\s+/g, '-').toLowerCase();
+            const checkbox = document.getElementById(`toggle-${layerId}`);
+            if (checkbox) {
+                checkbox.checked = newState;
+                if (map.getLayer(layerId)) {
+                    map.setLayoutProperty(layerId, 'visibility', newState ? 'visible' : 'none');
+                }
+            }
+        });
+    }
+}
+
+function toggleSubgroupLayers(groupName, subgroupName) {
+    const subgroup = layerConfig[groupName].subgroups[subgroupName];
+    let allOn = true;
+    
+    // Check current state
+    const checkStates = [];
+    subgroup.layers.forEach(layer => {
+        const layerId = layer.name.replace(/\s+/g, '-').toLowerCase();
+        const checkbox = document.getElementById(`toggle-${layerId}`);
+        if (checkbox) checkStates.push(checkbox.checked);
+    });
+    
+    allOn = checkStates.every(state => state === true);
+    const newState = !allOn;
+    
+    // Toggle all
+    subgroup.layers.forEach(layer => {
+        const layerId = layer.name.replace(/\s+/g, '-').toLowerCase();
+        const checkbox = document.getElementById(`toggle-${layerId}`);
+        if (checkbox) {
+            checkbox.checked = newState;
+            if (map.getLayer(layerId)) {
+                map.setLayoutProperty(layerId, 'visibility', newState ? 'visible' : 'none');
+            }
+        }
+    });
+}
 </script>
 
 </body>
