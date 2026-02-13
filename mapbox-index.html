@@ -228,7 +228,7 @@
 #measure-control {
     position: absolute;
     bottom: 30px;
-    left: 10px;
+    Right: 10px;
     background: white;
     padding: 10px;
     border-radius: 4px;
@@ -725,6 +725,15 @@ geolocate.on('geolocate', function() {
     'minzoom': 15,
     'maxzoom': 20,
     'bounds': [115.7715, -32.2426, 115.7737, -32.2414]
+});
+
+map.addLayer({
+    'id': 'drone-imagery',
+    'type': 'raster',
+    'source': 'drone-tiles',
+    'paint': {
+        'raster-opacity': 1
+    }
 });
 
 // Measurement tool
