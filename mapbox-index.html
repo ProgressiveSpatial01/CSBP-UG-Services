@@ -227,14 +227,25 @@
 		
 #measure-control {
     position: absolute;
-    top: 120px;
-    right: 10px;
+    bottom: 30px;
+    left: 10px;
     background: white;
     padding: 10px;
     border-radius: 4px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     font-family: Arial, sans-serif;
     font-size: 14px;
+    min-width: 200px;
+}
+
+#measure-control .measure-buttons {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+#measure-control .measure-buttons button {
+    flex: 1;
 }
 
 #measure-control button {
@@ -275,7 +286,10 @@
 </div>
 
 <div id='measure-control'>
-    <button id='measure-start'>Measure Distance</button>
+    <div class='measure-buttons'>
+        <button id='measure-distance'>Distance</button>
+        <button id='measure-area'>Area</button>
+    </div>
     <button id='measure-clear' disabled>Clear</button>
     <div id='measure-result'></div>
 </div>
@@ -714,117 +728,259 @@ geolocate.on('geolocate', function() {
 });
 
 // Measurement tool
+// Measurement tool
 let measurePoints = [];
+let measurePolygon = null;
 let measureLine = null;
 let measuring = false;
+let measureMode = null; // 'distance' or 'area'
 
-document.getElementById('measure-start').addEventListener('click', function() {
-    measuring = !measuring;
-    this.textContent = measuring ? 'Click on Map' : 'Measure Distance';
-    this.style.background = measuring ? '#ff6600' : '#0080ff';
-    
-    if (!measuring) {
-        measurePoints = [];
-        if (measureLine) {
-            map.removeLayer('measure-line');
-            map.removeSource('measure-line');
-            measureLine = null;
-        }
-        document.getElementById('measure-result').textContent = '';
-        document.getElementById('measure-clear').disabled = true;
+document.getElementById('measure-distance').addEventListener('click', function() {
+    if (measureMode === 'distance' && measuring) {
+        // Stop measuring
+        stopMeasuring();
+    } else {
+        // Start distance measuring
+        startMeasuring('distance');
+    }
+});
+
+document.getElementById('measure-area').addEventListener('click', function() {
+    if (measureMode === 'area' && measuring) {
+        // Stop measuring
+        stopMeasuring();
+    } else {
+        // Start area measuring
+        startMeasuring('area');
     }
 });
 
 document.getElementById('measure-clear').addEventListener('click', function() {
+    clearMeasurement();
+});
+
+function startMeasuring(mode) {
+    clearMeasurement();
+    measuring = true;
+    measureMode = mode;
+    
+    // Update button states
+    const distBtn = document.getElementById('measure-distance');
+    const areaBtn = document.getElementById('measure-area');
+    
+    if (mode === 'distance') {
+        distBtn.textContent = 'Stop';
+        distBtn.style.background = '#ff6600';
+        areaBtn.style.background = '#0080ff';
+        areaBtn.textContent = 'Area';
+        document.getElementById('measure-result').textContent = 'Click points on map';
+    } else {
+        areaBtn.textContent = 'Stop';
+        areaBtn.style.background = '#ff6600';
+        distBtn.style.background = '#0080ff';
+        distBtn.textContent = 'Distance';
+        document.getElementById('measure-result').textContent = 'Click to draw polygon';
+    }
+}
+
+function stopMeasuring() {
+    measuring = false;
+    
+    // Reset button states
+    const distBtn = document.getElementById('measure-distance');
+    const areaBtn = document.getElementById('measure-area');
+    distBtn.style.background = '#0080ff';
+    areaBtn.style.background = '#0080ff';
+    distBtn.textContent = 'Distance';
+    areaBtn.textContent = 'Area';
+}
+
+function clearMeasurement() {
     measurePoints = [];
-    if (measureLine) {
+    measuring = false;
+    measureMode = null;
+    
+    if (measureLine && map.getLayer('measure-line')) {
         map.removeLayer('measure-line');
         map.removeSource('measure-line');
         measureLine = null;
     }
+    
+    if (measurePolygon && map.getLayer('measure-polygon')) {
+        map.removeLayer('measure-polygon');
+        map.removeLayer('measure-polygon-outline');
+        map.removeSource('measure-polygon');
+        measurePolygon = null;
+    }
+    
     document.getElementById('measure-result').textContent = '';
-    this.disabled = true;
-    measuring = false;
-    document.getElementById('measure-start').textContent = 'Measure Distance';
-    document.getElementById('measure-start').style.background = '#0080ff';
-});
+    document.getElementById('measure-clear').disabled = true;
+    
+    // Reset buttons
+    document.getElementById('measure-distance').style.background = '#0080ff';
+    document.getElementById('measure-area').style.background = '#0080ff';
+    document.getElementById('measure-distance').textContent = 'Distance';
+    document.getElementById('measure-area').textContent = 'Area';
+}
 
 map.on('click', function(e) {
     if (!measuring) return;
     
     measurePoints.push([e.lngLat.lng, e.lngLat.lat]);
     
-    if (measurePoints.length >= 2) {
-        // Calculate distance using turf.js formula
-        let totalDistance = 0;
-        for (let i = 0; i < measurePoints.length - 1; i++) {
-            const lon1 = measurePoints[i][0];
-            const lat1 = measurePoints[i][1];
-            const lon2 = measurePoints[i + 1][0];
-            const lat2 = measurePoints[i + 1][1];
-            
-            const R = 6371000; // Earth radius in meters
-            const φ1 = lat1 * Math.PI / 180;
-            const φ2 = lat2 * Math.PI / 180;
-            const Δφ = (lat2 - lat1) * Math.PI / 180;
-            const Δλ = (lon2 - lon1) * Math.PI / 180;
-            
-            const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
-                    Math.cos(φ1) * Math.cos(φ2) *
-                    Math.sin(Δλ/2) * Math.sin(Δλ/2);
-            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-            
-            totalDistance += R * c;
+    if (measureMode === 'distance') {
+        // Distance measurement
+        if (measurePoints.length >= 2) {
+            updateDistanceMeasurement();
         }
+    } else if (measureMode === 'area') {
+        // Area measurement
+        if (measurePoints.length >= 3) {
+            updateAreaMeasurement();
+        }
+    }
+    
+    document.getElementById('measure-clear').disabled = false;
+});
+
+function updateDistanceMeasurement() {
+    let totalDistance = 0;
+    
+    for (let i = 0; i < measurePoints.length - 1; i++) {
+        const lon1 = measurePoints[i][0];
+        const lat1 = measurePoints[i][1];
+        const lon2 = measurePoints[i + 1][0];
+        const lat2 = measurePoints[i + 1][1];
         
-        // Update line
-        if (measureLine) {
-            map.getSource('measure-line').setData({
+        const R = 6371000; // Earth radius in meters
+        const φ1 = lat1 * Math.PI / 180;
+        const φ2 = lat2 * Math.PI / 180;
+        const Δφ = (lat2 - lat1) * Math.PI / 180;
+        const Δλ = (lon2 - lon1) * Math.PI / 180;
+        
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        
+        totalDistance += R * c;
+    }
+    
+    // Update line
+    if (measureLine && map.getSource('measure-line')) {
+        map.getSource('measure-line').setData({
+            'type': 'Feature',
+            'geometry': {
+                'type': 'LineString',
+                'coordinates': measurePoints
+            }
+        });
+    } else {
+        map.addSource('measure-line', {
+            'type': 'geojson',
+            'data': {
                 'type': 'Feature',
                 'geometry': {
                     'type': 'LineString',
                     'coordinates': measurePoints
                 }
-            });
-        } else {
-            map.addSource('measure-line', {
-                'type': 'geojson',
-                'data': {
-                    'type': 'Feature',
-                    'geometry': {
-                        'type': 'LineString',
-                        'coordinates': measurePoints
-                    }
-                }
-            });
-            
-            map.addLayer({
-                'id': 'measure-line',
-                'type': 'line',
-                'source': 'measure-line',
-                'paint': {
-                    'line-color': '#ff0000',
-                    'line-width': 3,
-                    'line-dasharray': [2, 2]
-                }
-            });
-            
-            measureLine = true;
-        }
-        
-        document.getElementById('measure-result').textContent = `Distance: ${totalDistance.toFixed(3)} m`;
-        document.getElementById('measure-clear').disabled = false;
-    }
-});
-        
-        map.addLayer({
-            'id': 'drone-imagery',
-            'type': 'raster',
-            'source': 'drone-tiles',
-            'paint': {
-                'raster-opacity': 1
             }
         });
+        
+        map.addLayer({
+            'id': 'measure-line',
+            'type': 'line',
+            'source': 'measure-line',
+            'paint': {
+                'line-color': '#ff0000',
+                'line-width': 3,
+                'line-dasharray': [2, 2]
+            }
+        });
+        
+        measureLine = true;
+    }
+    
+    document.getElementById('measure-result').textContent = `Distance: ${totalDistance.toFixed(3)} m`;
+}
+
+function updateAreaMeasurement() {
+    // Close the polygon
+    const polygonCoords = [...measurePoints, measurePoints[0]];
+    
+    // Calculate area using spherical excess formula
+    const area = calculatePolygonArea(measurePoints);
+    
+    // Update polygon
+    if (measurePolygon && map.getSource('measure-polygon')) {
+        map.getSource('measure-polygon').setData({
+            'type': 'Feature',
+            'geometry': {
+                'type': 'Polygon',
+                'coordinates': [polygonCoords]
+            }
+        });
+    } else {
+        map.addSource('measure-polygon', {
+            'type': 'geojson',
+            'data': {
+                'type': 'Feature',
+                'geometry': {
+                    'type': 'Polygon',
+                    'coordinates': [polygonCoords]
+                }
+            }
+        });
+        
+        map.addLayer({
+            'id': 'measure-polygon',
+            'type': 'fill',
+            'source': 'measure-polygon',
+            'paint': {
+                'fill-color': '#ff0000',
+                'fill-opacity': 0.2
+            }
+        });
+        
+        map.addLayer({
+            'id': 'measure-polygon-outline',
+            'type': 'line',
+            'source': 'measure-polygon',
+            'paint': {
+                'line-color': '#ff0000',
+                'line-width': 3,
+                'line-dasharray': [2, 2]
+            }
+        });
+        
+        measurePolygon = true;
+    }
+    
+    document.getElementById('measure-result').textContent = `Area: ${area.toFixed(3)} m²`;
+}
+
+function calculatePolygonArea(coords) {
+    // Calculate area in square meters using spherical excess formula
+    // This is accurate for small areas
+    
+    if (coords.length < 3) return 0;
+    
+    let total = 0;
+    
+    for (let i = 0; i < coords.length; i++) {
+        const j = (i + 1) % coords.length;
+        const lon1 = coords[i][0] * Math.PI / 180;
+        const lat1 = coords[i][1] * Math.PI / 180;
+        const lon2 = coords[j][0] * Math.PI / 180;
+        const lat2 = coords[j][1] * Math.PI / 180;
+        
+        total += (lon2 - lon1) * (2 + Math.sin(lat1) + Math.sin(lat2));
+    }
+    
+    total = Math.abs(total * 6371000 * 6371000 / 2);
+    
+    return total;
+}
         
 // Load all service layers
 Object.keys(layerConfig).forEach(groupName => {
