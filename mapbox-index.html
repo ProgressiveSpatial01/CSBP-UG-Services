@@ -249,95 +249,355 @@ geolocate.on('geolocate', function() {
     
     // Layer configuration
     const layerConfig = {
-        'CSBP DBYD Services': {
-            layers: [
-                {
-                    name: 'ASB Communications',
-                    file: 'data/CSPBUGServicesAsbuiltASBSERVICESCommunications_4.js',
-                    color: '#FF1493',
-                    visible: true
-                },
-                {
-                    name: 'ASB Cooling Water',
-                    file: 'data/CSPBUGServicesAsbuiltASBSERVICESCoolingWater_1.js',
-                    color: '#00CED1',
-                    visible: true
-                },
-                {
-                    name: 'ASB Power',
-                    file: 'data/CSPBUGServicesAsbuiltASBSERVICESPower_2.js',
-                    color: '#FF0000',
-                    visible: true
-                },
-                {
-                    name: 'ASB Sewer',
-                    file: 'data/CSPBUGServicesAsbuiltASBSERVICESSewer_3.js',
-                    color: '#8B4513',
-                    visible: true
-                },
-                {
-                    name: 'ASB Stormwater',
-                    file: 'data/CSPBUGServicesAsbuiltASBSERVICESStormwater_5.js',
-                    color: '#87CEEB',
-                    visible: true
-                },
-                {
-                    name: 'LOC Abandoned Water',
-                    file: 'data/CSPBUGServicesLocatedLOCSERVICESAbandonedWater_6.js',
-                    color: '#808080',
-                    visible: true
-                },
-                {
-                    name: 'LOC Communications',
-                    file: 'data/CSPBUGServicesLocatedLOCSERVICESCommunications_7.js',
-                    color: '#FF1493',
-                    visible: true
-                },
-                {
-                    name: 'LOC Fire Suppression',
-                    file: 'data/CSPBUGServicesLocatedLOCSERVICESFireSuppression_8.js',
-                    color: '#DC143C',
-                    visible: true
-                },
-                {
-                    name: 'LOC Gas',
-                    file: 'data/CSPBUGServicesLocatedLOCSERVICESGas_9.js',
-                    color: '#FFA500',
-                    visible: true
-                },
-                {
-                    name: 'LOC Power',
-                    file: 'data/CSPBUGServicesLocatedLOCSERVICESPower_10.js',
-                    color: '#FF4500',
-                    visible: true
-                },
-                {
-                    name: 'LOC Steam',
-                    file: 'data/CSPBUGServicesLocatedLOCSERVICESSteam_11.js',
-                    color: '#FF69B4',
-                    visible: true
-                },
-                {
-                    name: 'LOC Stormwater',
-                    file: 'data/CSPBUGServicesLocatedLOCSERVICESStormwater_12.js',
-                    color: '#00BFFF',
-                    visible: true
-                },
-                {
-                    name: 'LOC Unknown',
-                    file: 'data/CSPBUGServicesLocatedLOCSERVICESUnknown_13.js',
-                    color: '#A9A9A9',
-                    visible: true
-                },
-                {
-                    name: 'LOC Water',
-                    file: 'data/CSPBUGServicesLocatedLOCSERVICESWater_14.js',
-                    color: '#1E90FF',
-                    visible: true
-                }
-            ]
-        }
-    };
+    'CSBP DBYD Services': {
+        layers: [
+            {
+                name: 'ASB Communications',
+                file: 'data/CSPBUGServicesAsbuiltASBSERVICESCommunications_4.js',
+                color: '#FF1493',
+                visible: true
+            },
+            {
+                name: 'ASB Cooling Water',
+                file: 'data/CSPBUGServicesAsbuiltASBSERVICESCoolingWater_1.js',
+                color: '#00CED1',
+                visible: true
+            },
+            {
+                name: 'ASB Power',
+                file: 'data/CSPBUGServicesAsbuiltASBSERVICESPower_2.js',
+                color: '#FF0000',
+                visible: true
+            },
+            {
+                name: 'ASB Sewer',
+                file: 'data/CSPBUGServicesAsbuiltASBSERVICESSewer_3.js',
+                color: '#8B4513',
+                visible: true
+            },
+            {
+                name: 'ASB Stormwater',
+                file: 'data/CSPBUGServicesAsbuiltASBSERVICESStormwater_5.js',
+                color: '#87CEEB',
+                visible: true
+            },
+            {
+                name: 'LOC Abandoned Water',
+                file: 'data/CSPBUGServicesLocatedLOCSERVICESAbandonedWater_6.js',
+                color: '#808080',
+                visible: true
+            },
+            {
+                name: 'LOC Communications',
+                file: 'data/CSPBUGServicesLocatedLOCSERVICESCommunications_7.js',
+                color: '#FF1493',
+                visible: true
+            },
+            {
+                name: 'LOC Fire Suppression',
+                file: 'data/CSPBUGServicesLocatedLOCSERVICESFireSuppression_8.js',
+                color: '#DC143C',
+                visible: true
+            },
+            {
+                name: 'LOC Gas',
+                file: 'data/CSPBUGServicesLocatedLOCSERVICESGas_9.js',
+                color: '#FFA500',
+                visible: true
+            },
+            {
+                name: 'LOC Power',
+                file: 'data/CSPBUGServicesLocatedLOCSERVICESPower_10.js',
+                color: '#FF4500',
+                visible: true
+            },
+            {
+                name: 'LOC Steam',
+                file: 'data/CSPBUGServicesLocatedLOCSERVICESSteam_11.js',
+                color: '#FF69B4',
+                visible: true
+            },
+            {
+                name: 'LOC Stormwater',
+                file: 'data/CSPBUGServicesLocatedLOCSERVICESStormwater_12.js',
+                color: '#00BFFF',
+                visible: true
+            },
+            {
+                name: 'LOC Unknown',
+                file: 'data/CSPBUGServicesLocatedLOCSERVICESUnknown_13.js',
+                color: '#A9A9A9',
+                visible: true
+            },
+            {
+                name: 'LOC Water',
+                file: 'data/CSPBUGServicesLocatedLOCSERVICESWater_14.js',
+                color: '#1E90FF',
+                visible: true
+            }
+        ]
+    },
+    'UG Water Services': {
+        layers: [
+            {
+                name: 'UG Water Corp',
+                file: 'data/UGWaterCorp_29.js',
+                color: '#0066CC',
+                visible: false
+            },
+            {
+                name: 'UG Water Demin',
+                file: 'data/UGWaterDemin_28.js',
+                color: '#3399FF',
+                visible: false
+            },
+            {
+                name: 'UG Water KWRP',
+                file: 'data/UGWaterKWRP_27.js',
+                color: '#66B2FF',
+                visible: false
+            },
+            {
+                name: 'UG Water Permeate',
+                file: 'data/UGWaterPermeate_26.js',
+                color: '#99CCFF',
+                visible: false
+            },
+            {
+                name: 'UG Water Rain',
+                file: 'data/UGWaterRain_25.js',
+                color: '#00BFFF',
+                visible: false
+            },
+            {
+                name: 'UG Water Salt',
+                file: 'data/UGWaterSalt_24.js',
+                color: '#87CEEB',
+                visible: false
+            },
+            {
+                name: 'UG Water Scheme',
+                file: 'data/UGWaterScheme_23.js',
+                color: '#4682B4',
+                visible: false
+            },
+            {
+                name: 'UG Water Scheme Fire',
+                file: 'data/UGWaterSchemeFire_22.js',
+                color: '#5F9EA0',
+                visible: false
+            },
+            {
+                name: 'UG Water Waste',
+                file: 'data/UGWaterWaste_21.js',
+                color: '#708090',
+                visible: false
+            },
+            {
+                name: 'UG Water BP Fire',
+                file: 'data/UGWaterBPFire_30.js',
+                color: '#DC143C',
+                visible: false
+            },
+            {
+                name: 'UG Water Bore and Fire Hydrants',
+                file: 'data/UGWaterBoreandBoreFireHydrants_31.js',
+                color: '#B22222',
+                visible: false
+            }
+        ]
+    },
+    'UG Power & Comms': {
+        layers: [
+            {
+                name: 'UG Power HT',
+                file: 'data/UGPowerHT_39.js',
+                color: '#FF0000',
+                visible: false
+            },
+            {
+                name: 'UG Power LT',
+                file: 'data/UGPowerLT_38.js',
+                color: '#FF6347',
+                visible: false
+            },
+            {
+                name: 'UG Redundant Electrical',
+                file: 'data/UGRedundantElectrical_37.js',
+                color: '#FF4500',
+                visible: false
+            },
+            {
+                name: 'UG Portable Power Supply',
+                file: 'data/UGPortablePowerSupply_40.js',
+                color: '#FFA500',
+                visible: false
+            },
+            {
+                name: 'UG Communications',
+                file: 'data/UGCommunications_49.js',
+                color: '#32CD32',
+                visible: false
+            },
+            {
+                name: 'UG Telephone',
+                file: 'data/UGTelephone_32.js',
+                color: '#00FF00',
+                visible: false
+            },
+            {
+                name: 'UG Fibre Optic',
+                file: 'data/UGFibreOptic_45.js',
+                color: '#7FFF00',
+                visible: false
+            }
+        ]
+    },
+    'UG Gas & Air': {
+        layers: [
+            {
+                name: 'UG Gas Natural',
+                file: 'data/UGGasNatural_44.js',
+                color: '#FFD700',
+                visible: false
+            },
+            {
+                name: 'UG Hydrogen',
+                file: 'data/UGHydrogen_43.js',
+                color: '#FF69B4',
+                visible: false
+            },
+            {
+                name: 'UG Nitrogen',
+                file: 'data/UGNitrogen_42.js',
+                color: '#9370DB',
+                visible: false
+            },
+            {
+                name: 'UG Air Compressed',
+                file: 'data/UGAirCompressed_55.js',
+                color: '#87CEFA',
+                visible: false
+            },
+            {
+                name: 'UG Air Instrument',
+                file: 'data/UGAirInstrument_54.js',
+                color: '#B0E0E6',
+                visible: false
+            },
+            {
+                name: 'UG CO2',
+                file: 'data/UGCO2_50.js',
+                color: '#778899',
+                visible: false
+            }
+        ]
+    },
+    'UG Other Services': {
+        layers: [
+            {
+                name: 'UG Sewerage',
+                file: 'data/UGSewerage_34.js',
+                color: '#8B4513',
+                visible: false
+            },
+            {
+                name: 'UG Drains and Sumps',
+                file: 'data/UGDrainsandSumps_48.js',
+                color: '#A0522D',
+                visible: false
+            },
+            {
+                name: 'UG Reticulation',
+                file: 'data/UGReticulation_35.js',
+                color: '#D2691E',
+                visible: false
+            },
+            {
+                name: 'UG Redundant Pipe',
+                file: 'data/UGRedundantPipe_36.js',
+                color: '#CD853F',
+                visible: false
+            },
+            {
+                name: 'UG Oil',
+                file: 'data/UGOil_41.js',
+                color: '#8B0000',
+                visible: false
+            },
+            {
+                name: 'UG Sulphuric Acid',
+                file: 'data/UGSulphuricAcid_33.js',
+                color: '#FFFF00',
+                visible: false
+            },
+            {
+                name: 'UG Ammonia',
+                file: 'data/UGAmmonia_53.js',
+                color: '#00CED1',
+                visible: false
+            },
+            {
+                name: 'UG Effluent',
+                file: 'data/UGEffluent_46.js',
+                color: '#696969',
+                visible: false
+            },
+            {
+                name: 'UG Earthing Grid',
+                file: 'data/UGEarthingGrid_47.js',
+                color: '#FFD700',
+                visible: false
+            },
+            {
+                name: 'UG Bores',
+                file: 'data/UGBores_51.js',
+                color: '#4169E1',
+                visible: false
+            },
+            {
+                name: 'UG Argon',
+                file: 'data/UGArgon_52.js',
+                color: '#9932CC',
+                visible: false
+            }
+        ]
+    },
+    'Infrastructure': {
+        layers: [
+            {
+                name: 'UT Bench Mark',
+                file: 'data/UTBenchMark_20.js',
+                color: '#000000',
+                visible: false
+            },
+            {
+                name: 'UT Fence',
+                file: 'data/UTFence_19.js',
+                color: '#A9A9A9',
+                visible: false
+            },
+            {
+                name: 'UT Fire Water Test Locations',
+                file: 'data/UTFireWaterTestLocations_18.js',
+                color: '#FF0000',
+                visible: false
+            },
+            {
+                name: '3rd Incinerator Concrete Outline',
+                file: 'data/3rdIncineratorConcreteOutline_0.js',
+                color: '#808080',
+                visible: false
+            },
+            {
+                name: 'Base',
+                file: 'data/Base_56.js',
+                color: '#D3D3D3',
+                visible: false
+            }
+        ]
+    }
+};
     
     map.on('load', function() {
         // Add drone imagery tiles
