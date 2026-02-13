@@ -336,15 +336,7 @@ map.addControl(geolocate);
 geolocate.on('geolocate', function() {
     geolocate._watchState = 'OFF';
 });
-    
-    // Add search
-    map.addControl(
-        new MapboxGeocoder({
-            accessToken: mapboxgl.accessToken,
-            mapboxgl: mapboxgl,
-            marker: false
-        })
-    );
+
     
     // Add scale
     map.addControl(new mapboxgl.ScaleControl({
