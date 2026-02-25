@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Upload Layers - CSBP UG Services</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    
+    <!-- Mapbox GL JS -->
+    <script src='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js'></script>
+    <link href='https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css' rel='stylesheet' />
+    
+    <!-- toGeoJSON for KML conversion -->
+    <script src='https://unpkg.com/@mapbox/togeojson@0.16.0/togeojson.js'></script>
+    
+    <style>
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: Arial, sans-serif;
+        }
+        
+        #map { 
+            position: absolute; 
+            top: 0; 
+            bottom: 0; 
+            width: 100%; 
+        }
+        
+        #upload-panel {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            width: 350px;
+            max-height: 90vh;
+            overflow-y: auto;
+            z-index: 1;
+        }
+        
+        #upload-panel h2 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            color: #333;
+            border-bottom: 2px solid #0080ff;
+            padding-bottom: 5px;
+        }
+        
+        .upload-section {
+            margin-bottom: 20px;
+        }
+        
+        .upload-section h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #666;
+        }
+        
+        #drop-zone {
+            border: 2px dashed #0080ff;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            background: #f8f8f8;
+            transition: all 0.3s;
+        }
+        
+        #drop-zone:hover {
+            background: #e8f4ff;
+            border-color: #0060cc;
+        }
+        
+        #drop-zone.dragover {
+            background: #d0e8ff;
+            border-color: #0060cc;
+        }
+        
+        #drop-zone p {
+            margin: 5px 0;
+            color: #666;
+        }
+        
+        #drop-zone .icon {
+            font-size: 40px;
+            color: #0080ff;
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 13px;
+            color: #555;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        
+        .form-group input[type="color"] {
+            height: 40px;
+            cursor: pointer;
+        }
+        
+        .radio-group {
+            margin-bottom: 10px;
+        }
+        
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        
+        .radio-group input[type="radio"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        
+        .conditional-field {
+            margin-left: 25px;
+            margin-top: 8px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #0080ff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #0060cc;
+        }
+        
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .status-message {
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+        
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .status-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .file-info {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 13px;
+        }
+        
+        .file-info strong {
+            color: #333;
+        }
+        
+        #toggle-panel {
+            position: absolute;
+            top: 10px;
+            right: 370px;
+            background: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            cursor: pointer;
+            font-size: 14px;
+            z-index: 2;
+        }
+        
+        #toggle-panel:hover {
+            background: #f0f0f0;
+        }
+        
+        .layer-preview {
+            background: #f8f8f8;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        
+        .layer-preview-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .layer-preview-color {
+            width: 30px;
+            height: 3px;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+        
+        #attributes-list label {
+            font-size: 13px;
+            padding: 4px 0;
+        }
+        
+        #attributes-list label:hover {
+            background: #f8f8f8;
+            padding-left: 5px;
+            margin-left: -5px;
+            border-radius: 3px;
+        }
+        
+        .attr-checkbox {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div id='map'></div>
+
+<button id='toggle-panel'>☰ Upload</button>
+
+<div id='upload-panel'>
+    <h2>Upload Layer</h2>
+    
+    <div id='status-container'></div>
+    
+    <div class='upload-section'>
+        <h3>1. Select KML File</h3>
+        <div id='drop-zone'>
+            <div class='icon'>📁</div>
+            <p><strong>Drag & drop KML file here</strong></p>
+            <p>or click to browse</p>
+        </div>
+        <input type='file' id='file-input' accept='.kml' />
+        
+        <div id='file-info' class='file-info hidden'>
+            <strong>Selected:</strong> <span id='file-name'></span><br>
+            <strong>Features:</strong> <span id='feature-count'></span>
+        </div>
+    </div>
+    
+    <div class='upload-section'>
+        <h3>2. Layer Action</h3>
+        <div class='radio-group'>
+            <label>
+                <input type='radio' name='action' value='replace' checked>
+                Replace existing layer
+            </label>
+            <div id='replace-options' class='conditional-field'>
+                <select id='existing-layers'>
+                    <option value=''>Select layer to replace...</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class='radio-group'>
+            <label>
+                <input type='radio' name='action' value='new'>
+                Create new layer
+            </label>
+            <div id='new-layer-options' class='conditional-field hidden'>
+                <label>Layer Name:</label>
+                <input type='text' id='new-layer-name' placeholder='Enter layer name...'>
+                
+                <label style='margin-top: 10px;'>Layer Color:</label>
+                <input type='color' id='new-layer-color' value='#0080ff'>
+            </div>
+        </div>
+    </div>
+    
+    <div class='upload-section'>
+        <h3>3. Group Placement</h3>
+        <div class='radio-group'>
+            <label>
+                <input type='radio' name='group-action' value='existing' checked>
+                Add to existing group
+            </label>
+            <div id='existing-group-options' class='conditional-field'>
+                <select id='existing-groups'>
+                    <option value=''>Select group...</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class='radio-group'>
+            <label>
+                <input type='radio' name='group-action' value='new-group'>
+                Create new group
+            </label>
+            <div id='new-group-options' class='conditional-field hidden'>
+                <label>Group Name:</label>
+                <input type='text' id='new-group-name' placeholder='Enter group name...'>
+            </div>
+        </div>
+    </div>
+    
+    <div class='upload-section' id='attributes-section' style='display: none;'>
+        <h3>4. Popup Attributes</h3>
+        <p style='font-size: 12px; color: #666; margin-bottom: 10px;'>Select which attributes to show in popups:</p>
+        <div id='attributes-list' style='max-height: 200px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px; padding: 10px;'>
+            <!-- Attributes will be populated here -->
+        </div>
+    </div>
+    
+    <div id='preview-section' class='hidden'>
+        <div class='layer-preview'>
+            <strong>Preview:</strong>
+            <div class='layer-preview-item'>
+                <div class='layer-preview-color' id='preview-color'></div>
+                <span id='preview-name'></span>
+            </div>
+            <div style='font-size: 11px; color: #666; margin-top: 5px;'>
+                Group: <span id='preview-group'></span>
+            </div>
+            <div style='font-size: 11px; color: #666; margin-top: 5px;'>
+                Attributes: <span id='preview-attributes'>None selected</span>
+            </div>
+        </div>
+    </div>
+    
+    <button id='upload-btn' disabled>Upload to Map</button>
+    
+    <div style='margin-top: 15px; text-align: center;'>
+        <a href='mapbox-index.html' style='color: #0080ff; text-decoration: none; font-size: 13px;'>← Back to Map</a>
+    </div>
+</div>
+
+<script>
+    mapboxgl.accessToken = 'pk.eyJ1IjoicHJvZ3Jlc3NpdmVzcGF0aWFsMDEiLCJhIjoiY21saXk2ajY4MDd4NjNlbzk1aHh3ZWcxOCJ9.RvuZXciIFtGqGzwXiZnmbw';
+    
+    const map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/satellite-streets-v12',
+        center: [115.774, -32.242],
+        zoom: 16
+    });
+    
+    // Add navigation controls
+    map.addControl(new mapboxgl.NavigationControl());
+    
+    // State management
+    let uploadedFile = null;
+    let uploadedGeoJSON = null;
+    let availableAttributes = [];
+    let selectedAttributes = [];
+    let existingLayers = {};
+    let layerGroups = {};
+    
+    // Load existing layer configuration from main map
+    const layerConfig = {
+        'As-Built UG Services': ['ASB Communications', 'ASB Cooling Water', 'ASB Power', 'ASB Sewer', 'ASB Stormwater'],
+        'Located UG Services': ['LOC Abandoned Water', 'LOC Communications', 'LOC Fire Suppression', 'LOC Gas', 'LOC Power', 'LOC Steam', 'LOC Stormwater', 'LOC Unknown', 'LOC Water'],
+        'Design': ['3rd Incinerator Concrete Outline'],
+        'CSBP DBYD UG Services': []
+    };
+    
+    // Initialize UI
+    function initializeUI() {
+        const existingLayersSelect = document.getElementById('existing-layers');
+        const existingGroupsSelect = document.getElementById('existing-groups');
+        
+        // Populate existing layers
+        Object.keys(layerConfig).forEach(groupName => {
+            layerConfig[groupName].forEach(layerName => {
+                const option = document.createElement('option');
+                option.value = layerName;
+                option.textContent = `${layerName} (${groupName})`;
+                existingLayersSelect.appendChild(option);
+                
+                existingLayers[layerName] = {
+                    group: groupName,
+                    color: getDefaultColor(layerName)
+                };
+            });
+        });
+        
+        // Populate existing groups
+        Object.keys(layerConfig).forEach(groupName => {
+            const option = document.createElement('option');
+            option.value = groupName;
+            option.textContent = groupName;
+            existingGroupsSelect.appendChild(option);
+        });
+    }
+    
+    function getDefaultColor(layerName) {
+        const colorMap = {
+            'ASB Communications': '#FF1493',
+            'ASB Cooling Water': '#00CED1',
+            'ASB Power': '#FF0000',
+            'ASB Sewer': '#8B4513',
+            'ASB Stormwater': '#87CEEB',
+            'LOC Abandoned Water': '#808080',
+            'LOC Communications': '#FF1493',
+            'LOC Fire Suppression': '#DC143C',
+            'LOC Gas': '#FFA500',
+            'LOC Power': '#FF4500',
+            'LOC Steam': '#FF69B4',
+            'LOC Stormwater': '#00BFFF',
+            'LOC Unknown': '#A9A9A9',
+            'LOC Water': '#1E90FF'
+        };
+        return colorMap[layerName] || '#0080ff';
+    }
+    
+    // Toggle panel
+    document.getElementById('toggle-panel').addEventListener('click', function() {
+        const panel = document.getElementById('upload-panel');
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    });
+    
+    // File upload handling
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    
+    dropZone.addEventListener('click', () => fileInput.click());
+    
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('dragover');
+    });
+    
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('dragover');
+    });
+    
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFileSelect(files[0]);
+        }
+    });
+    
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+    
+    function handleFileSelect(file) {
+        if (!file.name.toLowerCase().endsWith('.kml')) {
+            showStatus('Please select a KML file', 'error');
+            return;
+        }
+        
+        uploadedFile = file;
+        document.getElementById('file-name').textContent = file.name;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const kmlText = e.target.result;
+                const parser = new DOMParser();
+                const kml = parser.parseFromString(kmlText, 'text/xml');
+                
+                // Convert KML to GeoJSON
+                uploadedGeoJSON = toGeoJSON.kml(kml);
+                
+                const featureCount = uploadedGeoJSON.features ? uploadedGeoJSON.features.length : 0;
+                document.getElementById('feature-count').textContent = featureCount;
+                document.getElementById('file-info').classList.remove('hidden');
+                document.getElementById('upload-btn').disabled = false;
+                
+                // Extract available attributes
+                extractAttributes(uploadedGeoJSON);
+                
+                showStatus(`KML loaded successfully: ${featureCount} features`, 'success');
+                updatePreview();
+                
+            } catch (error) {
+                showStatus('Error parsing KML file: ' + error.message, 'error');
+                console.error(error);
+            }
+        };
+        reader.readAsText(file);
+    }
+    
+    // Radio button handling
+    document.querySelectorAll('input[name="action"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'replace') {
+                document.getElementById('replace-options').classList.remove('hidden');
+                document.getElementById('new-layer-options').classList.add('hidden');
+            } else {
+                document.getElementById('replace-options').classList.add('hidden');
+                document.getElementById('new-layer-options').classList.remove('hidden');
+            }
+            updatePreview();
+        });
+    });
+    
+    document.querySelectorAll('input[name="group-action"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'existing') {
+                document.getElementById('existing-group-options').classList.remove('hidden');
+                document.getElementById('new-group-options').classList.add('hidden');
+            } else {
+                document.getElementById('existing-group-options').classList.add('hidden');
+                document.getElementById('new-group-options').classList.remove('hidden');
+            }
+            updatePreview();
+        });
+    });
+    
+    // Update preview when selections change
+    document.getElementById('existing-layers').addEventListener('change', updatePreview);
+    document.getElementById('new-layer-name').addEventListener('input', updatePreview);
+    document.getElementById('new-layer-color').addEventListener('change', updatePreview);
+    document.getElementById('existing-groups').addEventListener('change', updatePreview);
+    document.getElementById('new-group-name').addEventListener('input', updatePreview);
+    
+    function extractAttributes(geojson) {
+        availableAttributes = [];
+        selectedAttributes = [];
+        
+        // Get all unique attribute keys from all features
+        const attributeSet = new Set();
+        
+        if (geojson.features && geojson.features.length > 0) {
+            geojson.features.forEach(feature => {
+                if (feature.properties) {
+                    Object.keys(feature.properties).forEach(key => {
+                        // Skip empty or null values, and common metadata fields
+                        if (feature.properties[key] !== null && 
+                            feature.properties[key] !== '' && 
+                            !['name', 'description', 'styleUrl', 'styleHash', 'icon'].includes(key)) {
+                            attributeSet.add(key);
+                        }
+                    });
+                }
+            });
+        }
+        
+        availableAttributes = Array.from(attributeSet).sort();
+        
+        // Display attributes
+        displayAttributes();
+    }
+    
+    function displayAttributes() {
+        const attributesList = document.getElementById('attributes-list');
+        const attributesSection = document.getElementById('attributes-section');
+        
+        if (availableAttributes.length === 0) {
+            attributesSection.style.display = 'none';
+            attributesList.innerHTML = '<p style="color: #999; font-size: 12px;">No attributes found in this file</p>';
+            return;
+        }
+        
+        attributesSection.style.display = 'block';
+        attributesList.innerHTML = '';
+        
+        // Add "Select All" option
+        const selectAllDiv = document.createElement('div');
+        selectAllDiv.style.marginBottom = '10px';
+        selectAllDiv.style.paddingBottom = '10px';
+        selectAllDiv.style.borderBottom = '1px solid #ddd';
+        selectAllDiv.innerHTML = `
+            <label style="display: flex; align-items: center; cursor: pointer; font-weight: bold;">
+                <input type="checkbox" id="select-all-attrs" style="margin-right: 8px;">
+                Select All
+            </label>
+        `;
+        attributesList.appendChild(selectAllDiv);
+        
+        // Add individual attributes
+        availableAttributes.forEach((attr, index) => {
+            const div = document.createElement('div');
+            div.style.marginBottom = '8px';
+            div.innerHTML = `
+                <label style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" class="attr-checkbox" data-attr="${attr}" style="margin-right: 8px;" ${index < 5 ? 'checked' : ''}>
+                    ${attr}
+                </label>
+            `;
+            attributesList.appendChild(div);
+        });
+        
+        // Initialize selected attributes (first 5 by default)
+        selectedAttributes = availableAttributes.slice(0, Math.min(5, availableAttributes.length));
+        
+        // Event listeners
+        document.getElementById('select-all-attrs').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.attr-checkbox');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+            updateSelectedAttributes();
+        });
+        
+        document.querySelectorAll('.attr-checkbox').forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectedAttributes);
+        });
+        
+        updatePreview();
+    }
+    
+    function updateSelectedAttributes() {
+        selectedAttributes = [];
+        document.querySelectorAll('.attr-checkbox:checked').forEach(checkbox => {
+            selectedAttributes.push(checkbox.dataset.attr);
+        });
+        
+        // Update select all checkbox state
+        const selectAllCheckbox = document.getElementById('select-all-attrs');
+        const allCheckboxes = document.querySelectorAll('.attr-checkbox');
+        const checkedCheckboxes = document.querySelectorAll('.attr-checkbox:checked');
+        selectAllCheckbox.checked = allCheckboxes.length === checkedCheckboxes.length;
+        
+        updatePreview();
+    }
+    
+    function updatePreview() {
+        if (!uploadedGeoJSON) return;
+        
+        const action = document.querySelector('input[name="action"]:checked').value;
+        const groupAction = document.querySelector('input[name="group-action"]:checked').value;
+        
+        let layerName, layerColor, groupName;
+        
+        if (action === 'replace') {
+            layerName = document.getElementById('existing-layers').value;
+            if (layerName && existingLayers[layerName]) {
+                layerColor = existingLayers[layerName].color;
+            }
+        } else {
+            layerName = document.getElementById('new-layer-name').value;
+            layerColor = document.getElementById('new-layer-color').value;
+        }
+        
+        if (groupAction === 'existing') {
+            groupName = document.getElementById('existing-groups').value;
+        } else {
+            groupName = document.getElementById('new-group-name').value;
+        }
+        
+        if (layerName && groupName) {
+            document.getElementById('preview-section').classList.remove('hidden');
+            document.getElementById('preview-name').textContent = layerName;
+            document.getElementById('preview-color').style.backgroundColor = layerColor;
+            document.getElementById('preview-group').textContent = groupName;
+            
+            // Show selected attributes
+            const attrPreview = selectedAttributes.length > 0 
+                ? selectedAttributes.join(', ') 
+                : 'None selected';
+            document.getElementById('preview-attributes').textContent = attrPreview;
+        } else {
+            document.getElementById('preview-section').classList.add('hidden');
+        }
+    }
+    
+    // Upload button
+    document.getElementById('upload-btn').addEventListener('click', function() {
+        if (!uploadedGeoJSON) {
+            showStatus('No file loaded', 'error');
+            return;
+        }
+        
+        const action = document.querySelector('input[name="action"]:checked').value;
+        const groupAction = document.querySelector('input[name="group-action"]:checked').value;
+        
+        let layerName, layerColor, groupName;
+        
+        // Get layer details
+        if (action === 'replace') {
+            layerName = document.getElementById('existing-layers').value;
+            if (!layerName) {
+                showStatus('Please select a layer to replace', 'error');
+                return;
+            }
+            layerColor = existingLayers[layerName].color;
+        } else {
+            layerName = document.getElementById('new-layer-name').value.trim();
+            if (!layerName) {
+                showStatus('Please enter a layer name', 'error');
+                return;
+            }
+            layerColor = document.getElementById('new-layer-color').value;
+        }
+        
+        // Get group details
+        if (groupAction === 'existing') {
+            groupName = document.getElementById('existing-groups').value;
+            if (!groupName) {
+                showStatus('Please select a group', 'error');
+                return;
+            }
+        } else {
+            groupName = document.getElementById('new-group-name').value.trim();
+            if (!groupName) {
+                showStatus('Please enter a group name', 'error');
+                return;
+            }
+        }
+        
+        // Add layer to map
+        addLayerToMap(layerName, layerColor, uploadedGeoJSON, selectedAttributes, action === 'replace');
+        
+        showStatus(`Layer "${layerName}" ${action === 'replace' ? 'replaced' : 'added'} successfully!`, 'success');
+        
+        // Store in localStorage for persistence
+        saveToLocalStorage(layerName, groupName, layerColor, uploadedGeoJSON, selectedAttributes);
+    });
+    
+    function addLayerToMap(layerName, color, geojson, attributes, isReplace) {
+        const layerId = layerName.replace(/\s+/g, '-').toLowerCase();
+        
+        // Remove existing layer if replacing
+        if (isReplace && map.getLayer(layerId)) {
+            map.removeLayer(layerId);
+            map.removeSource(layerId);
+        }
+        
+        // Add new layer
+        map.addSource(layerId, {
+            'type': 'geojson',
+            'data': geojson
+        });
+        
+        map.addLayer({
+            'id': layerId,
+            'type': 'line',
+            'source': layerId,
+            'layout': {
+                'visibility': 'visible',
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+            'paint': {
+                'line-color': color,
+                'line-width': 3
+            }
+        });
+        
+        // Add click handler for popups
+        map.on('click', layerId, function(e) {
+            const props = e.features[0].properties;
+            
+            let popupHTML = `<h4 style="margin: 0 0 10px 0; color: #0080ff;">${layerName}</h4>`;
+            
+            if (attributes && attributes.length > 0) {
+                popupHTML += '<div style="max-height: 300px; overflow-y: auto;">';
+                attributes.forEach(attr => {
+                    if (props[attr] !== null && props[attr] !== undefined && props[attr] !== '') {
+                        popupHTML += `
+                            <div style="margin: 5px 0; display: grid; grid-template-columns: 120px 1fr; gap: 10px;">
+                                <span style="font-weight: bold; color: #666;">${attr}:</span>
+                                <span style="color: #333;">${props[attr]}</span>
+                            </div>
+                        `;
+                    }
+                });
+                popupHTML += '</div>';
+            } else {
+                popupHTML += '<p style="color: #999; font-size: 12px;">No attributes configured</p>';
+            }
+            
+            new mapboxgl.Popup()
+                .setLngLat(e.lngLat)
+                .setHTML(popupHTML)
+                .addTo(map);
+        });
+        
+        // Change cursor on hover
+        map.on('mouseenter', layerId, function() {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+        
+        map.on('mouseleave', layerId, function() {
+            map.getCanvas().style.cursor = '';
+        });
+        
+        // Zoom to layer
+        const bounds = new mapboxgl.LngLatBounds();
+        geojson.features.forEach(feature => {
+            if (feature.geometry.type === 'LineString') {
+                feature.geometry.coordinates.forEach(coord => {
+                    bounds.extend(coord);
+                });
+            } else if (feature.geometry.type === 'Point') {
+                bounds.extend(feature.geometry.coordinates);
+            }
+        });
+        map.fitBounds(bounds, { padding: 50 });
+    }
+    
+    function saveToLocalStorage(layerName, groupName, color, geojson, attributes) {
+        const uploadedLayers = JSON.parse(localStorage.getItem('uploadedLayers') || '{}');
+        uploadedLayers[layerName] = {
+            group: groupName,
+            color: color,
+            geojson: geojson,
+            attributes: attributes || [],
+            timestamp: new Date().toISOString()
+        };
+        localStorage.setItem('uploadedLayers', JSON.stringify(uploadedLayers));
+    }
+    
+    function showStatus(message, type) {
+        const container = document.getElementById('status-container');
+        container.innerHTML = `<div class="status-message ${type}">${message}</div>`;
+        setTimeout(() => {
+            container.innerHTML = '';
+        }, 5000);
+    }
+    
+    // Initialize
+    map.on('load', function() {
+        initializeUI();
+        
+        // Load any previously uploaded layers
+        const uploadedLayers = JSON.parse(localStorage.getItem('uploadedLayers') || '{}');
+        Object.keys(uploadedLayers).forEach(layerName => {
+            const layer = uploadedLayers[layerName];
+            addLayerToMap(layerName, layer.color, layer.geojson, layer.attributes || [], false);
+        });
+        
+        if (Object.keys(uploadedLayers).length > 0) {
+            showStatus(`Loaded ${Object.keys(uploadedLayers).length} previously uploaded layers`, 'info');
+        }
+    });
+</script>
+
+</body>
+</html>
