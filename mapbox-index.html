@@ -378,42 +378,6 @@
             </a>
         </div>
     </div>
-    
-    <!-- Future Sections - Examples -->
-    <!-- 
-    <div class='control-section'>
-        <div class='section-header collapsed' data-section='analysis'>
-            <div>
-                <span class='icon'>📊</span>
-                <span>Analysis Tools</span>
-            </div>
-            <span class='toggle-arrow'>▼</span>
-        </div>
-        <div class='section-content collapsed' id='analysis-content'>
-            Future analysis tools here
-        </div>
-    </div>
-    
-    <div class='control-section'>
-        <div class='section-header collapsed' data-section='permits'>
-            <div>
-                <span class='icon'>📝</span>
-                <span>Excavation Permits</span>
-            </div>
-            <span class='toggle-arrow'>▼</span>
-        </div>
-        <div class='section-content collapsed' id='permits-content'>
-            Future permit workflow here
-        </div>
-    </div>
-    -->
-</div>
-    
-    <div style='margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd;'>
-        <a href='upload.html' style='display: block; text-align: center; padding: 10px; background: #0080ff; color: white; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: bold;'>
-            📤 Upload New Layer
-        </a>
-    </div>
 </div>
 
 <div id='measure-control'>
@@ -890,115 +854,146 @@ document.querySelectorAll('.section-header').forEach(header => {
         content.classList.toggle('collapsed');
     });
 });   
-    map.on('load', function() {
-        // Add drone imagery tiles
-        map.addSource('drone-tiles', {
-    'type': 'raster',
-    'tiles': ['tiles/{z}/{x}/{y}.jpg'],
-    'tileSize': 256,
-    'minzoom': 15,
-    'maxzoom': 20,
-    'bounds': [115.7715, -32.2426, 115.7737, -32.2414]
-});
-
-map.addLayer({
-    'id': 'drone-imagery',
-    'type': 'raster',
-    'source': 'drone-tiles',
-    'paint': {
-        'raster-opacity': 1
-    }
-	
-	// Build layer control
-        buildLayerControl();
+map.on('load', function() {
+    // Add drone imagery tiles
+    map.addSource('drone-tiles', {
+        'type': 'raster',
+        'tiles': ['tiles/{z}/{x}/{y}.jpg'],
+        'tileSize': 256,
+        'minzoom': 15,
+        'maxzoom': 20,
+        'bounds': [115.7715, -32.2426, 115.7737, -32.2414]
+    });
+    
+    map.addLayer({
+        'id': 'drone-imagery',
+        'type': 'raster',
+        'source': 'drone-tiles',
+        'paint': {
+            'raster-opacity': 1
+        }
+    }); // <-- CLOSE THE addLayer HERE
+    
+    // Load all service layers
+    Object.keys(layerConfig).forEach(groupName => {
+        // ... your existing layer loading code ...
+    });
+    
+    // Build layer control
+    buildLayerControl();
+    
+    // Load uploaded layers from localStorage
+    const uploadedLayers = JSON.parse(localStorage.getItem('uploadedLayers') || '{}');
+    
+    Object.keys(uploadedLayers).forEach(layerName => {
+        const layer = uploadedLayers[layerName];
+        const layerId = layerName.replace(/\s+/g, '-').toLowerCase();
         
-        // Load uploaded layers from localStorage
-        const uploadedLayers = JSON.parse(localStorage.getItem('uploadedLayers') || '{}');
+        // Remove existing layer if it exists (for replacements)
+        if (map.getLayer(layerId)) {
+            map.removeLayer(layerId);
+            map.removeSource(layerId);
+        }
         
-        Object.keys(uploadedLayers).forEach(layerName => {
-            const layer = uploadedLayers[layerName];
-            const layerId = layerName.replace(/\s+/g, '-').toLowerCase();
-            
-            // Remove existing layer if it exists (for replacements)
-            if (map.getLayer(layerId)) {
-                map.removeLayer(layerId);
-                map.removeSource(layerId);
-            }
-            
-            // Add source
-            map.addSource(layerId, {
-                'type': 'geojson',
-                'data': layer.geojson
-            });
-            
-            // Add layer
-            map.addLayer({
-                'id': layerId,
-                'type': 'line',
-                'source': layerId,
-                'layout': {
-                    'visibility': 'visible',
-                    'line-join': 'round',
-                    'line-cap': 'round'
-                },
-                'paint': {
-                    'line-color': layer.color,
-                    'line-width': 3
-                }
-            });
-            
-            // Add click handler for popups with selected attributes
-            map.on('click', layerId, function(e) {
-                const props = e.features[0].properties;
-                
-                let popupHTML = `<h4>${layerName}</h4>`;
-                
-                if (layer.attributes && layer.attributes.length > 0) {
-                    layer.attributes.forEach(attr => {
-                        if (props[attr] !== null && props[attr] !== undefined && props[attr] !== '') {
-                            popupHTML += `<div class="popup-row"><span class="popup-label">${attr}:</span><span class="popup-value">${props[attr]}</span></div>`;
-                        }
-                    });
-                } else {
-                    // Fallback to all properties if no attributes specified
-                    Object.keys(props).forEach(key => {
-                        if (props[key] !== null && props[key] !== '') {
-                            popupHTML += `<div class="popup-row"><span class="popup-label">${key}:</span><span class="popup-value">${props[key]}</span></div>`;
-                        }
-                    });
-                }
-                
-                new mapboxgl.Popup()
-                    .setLngLat(e.lngLat)
-                    .setHTML(popupHTML)
-                    .addTo(map);
-            });
-            
-            // Change cursor on hover
-            map.on('mouseenter', layerId, function() {
-                map.getCanvas().style.cursor = 'pointer';
-            });
-            
-            map.on('mouseleave', layerId, function() {
-                map.getCanvas().style.cursor = '';
-            });
-            
-            console.log(`Loaded uploaded layer: ${layerName}`);
+        // Add source
+        map.addSource(layerId, {
+            'type': 'geojson',
+            'data': layer.geojson
         });
         
-        if (Object.keys(uploadedLayers).length > 0) {
-            console.log(`Loaded ${Object.keys(uploadedLayers).length} uploaded layers from localStorage`);
-        }
-    }); // END of map.on('load')
-});
+        // Add layer
+        map.addLayer({
+            'id': layerId,
+            'type': 'line',
+            'source': layerId,
+            'layout': {
+                'visibility': 'visible',
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+            'paint': {
+                'line-color': layer.color,
+                'line-width': 3
+            }
+        });
+        
+        // Add click handler for popups with selected attributes
+        map.on('click', layerId, function(e) {
+            const props = e.features[0].properties;
+            
+            let popupHTML = `<h4>${layerName}</h4>`;
+            
+            if (layer.attributes && layer.attributes.length > 0) {
+                layer.attributes.forEach(attr => {
+                    if (props[attr] !== null && props[attr] !== undefined && props[attr] !== '') {
+                        popupHTML += `<div class="popup-row"><span class="popup-label">${attr}:</span><span class="popup-value">${props[attr]}</span></div>`;
+                    }
+                });
+            } else {
+                // Fallback to all properties if no attributes specified
+                Object.keys(props).forEach(key => {
+                    if (props[key] !== null && props[key] !== '') {
+                        popupHTML += `<div class="popup-row"><span class="popup-label">${key}:</span><span class="popup-value">${props[key]}</span></div>`;
+                    }
+                });
+            }
+            
+            new mapboxgl.Popup()
+                .setLngLat(e.lngLat)
+                .setHTML(popupHTML)
+                .addTo(map);
+        });
+        
+        // Change cursor on hover
+        map.on('mouseenter', layerId, function() {
+            map.getCanvas().style.cursor = 'pointer';
+        });
+        
+        map.on('mouseleave', layerId, function() {
+            map.getCanvas().style.cursor = '';
+        });
+        
+        console.log(`Loaded uploaded layer: ${layerName}`);
+    });
+    
+    if (Object.keys(uploadedLayers).length > 0) {
+        console.log(`Loaded ${Object.keys(uploadedLayers).length} uploaded layers from localStorage`);
+    }
+    
+}); // <-- CLOSE map.on('load') HERE - ONLY ONE CLOSING
 
-// Measurement tool
-// Measurement tool
+// Measurement tool (OUTSIDE map.on('load'))
 let measurePoints = [];
 let measurePolygon = null;
 let measureLine = null;
 let measuring = false;
-let measureMode = null; // 'distance' or 'area'
+let measureMode = null;
+```
+
+---
+
+## **Key Changes:**
+
+1. ✅ **Closed `map.addLayer()` properly** with `});`
+2. ✅ **Put localStorage code AFTER addLayer**, not inside it
+3. ✅ **Only ONE closing `});` for `map.on('load')`**
+4. ✅ **Measurement variables OUTSIDE** the map.on('load') function
+
+---
+
+**The structure should be:**
+```
+map.on('load', function() {
+    addSource
+    addLayer      } <-- close this
+    
+    load other layers
+    buildLayerControl
+    load uploaded layers
+    
+}  <-- close map.on('load') ONCE
+
+measurement variables
 
 document.getElementById('measure-distance').addEventListener('click', function() {
     if (measureMode === 'distance' && measuring) {
