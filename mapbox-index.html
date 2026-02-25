@@ -442,13 +442,22 @@ document.querySelectorAll('.section-header').forEach(header => {
         this.classList.toggle('collapsed');
         content.classList.toggle('collapsed');
     });
-});
-    
-    // Add scale
-    map.addControl(new mapboxgl.ScaleControl({
-        maxWidth: 200,
-        unit: 'metric'
-    }));
+}); // <-- CLOSE THE FOREACH HERE
+
+// Add search
+map.addControl(
+    new MapboxGeocoder({
+        accessToken: mapboxgl.accessToken,
+        mapboxgl: mapboxgl,
+        marker: false
+    })
+);
+
+// Add scale
+map.addControl(new mapboxgl.ScaleControl({
+    maxWidth: 200,
+    unit: 'metric'
+}));
     
     // Layer configuration
     const layerConfig = {
