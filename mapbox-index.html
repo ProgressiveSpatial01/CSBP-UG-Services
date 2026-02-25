@@ -389,7 +389,6 @@
     <div id='measure-result'></div>
 </div>
 
-
 <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoicHJvZ3Jlc3NpdmVzcGF0aWFsMDEiLCJhIjoiY21saXk2ajY4MDd4NjNlbzk1aHh3ZWcxOCJ9.RvuZXciIFtGqGzwXiZnmbw';
     
@@ -433,6 +432,17 @@ geolocate.on('geolocate', function() {
     geolocate._watchState = 'OFF';
 });
 
+// Section toggle functionality
+document.querySelectorAll('.section-header').forEach(header => {
+    header.addEventListener('click', function() {
+        const sectionName = this.dataset.section;
+        const content = document.getElementById(sectionName + '-content');
+        
+        // Toggle this section
+        this.classList.toggle('collapsed');
+        content.classList.toggle('collapsed');
+    });
+});
     
     // Add scale
     map.addControl(new mapboxgl.ScaleControl({
