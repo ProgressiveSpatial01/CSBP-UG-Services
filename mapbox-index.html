@@ -947,21 +947,7 @@ let measurePolygon = null;
 let measureLine = null;
 let measuring = false;
 let measureMode = null;
-```
 
----
-
-## **Key Changes:**
-
-1. ✅ **Closed `map.addLayer()` properly** with `});`
-2. ✅ **Put localStorage code AFTER addLayer**, not inside it
-3. ✅ **Only ONE closing `});` for `map.on('load')`**
-4. ✅ **Measurement variables OUTSIDE** the map.on('load') function
-
----
-
-**The structure should be:**
-```
 map.on('load', function() {
     addSource
     addLayer      } <-- close this
