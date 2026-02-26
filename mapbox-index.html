@@ -948,18 +948,6 @@ let measureLine = null;
 let measuring = false;
 let measureMode = null;
 
-map.on('load', function() {
-    addSource
-    addLayer      } <-- close this
-    
-    load other layers
-    buildLayerControl
-    load uploaded layers
-    
-}  <-- close map.on('load') ONCE
-
-measurement variables
-
 document.getElementById('measure-distance').addEventListener('click', function() {
     if (measureMode === 'distance' && measuring) {
         // Stop measuring
@@ -1308,7 +1296,6 @@ Object.keys(layerConfig).forEach(groupName => {
         
         // Build layer control
         buildLayerControl();
-    });
     
     function buildLayerControl() {
     const layerList = document.getElementById('layer-list');
