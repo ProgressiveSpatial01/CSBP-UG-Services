@@ -822,15 +822,17 @@ map.addControl(new mapboxgl.ScaleControl({
         }
     }
 };
- // Section toggle functionality
-document.querySelectorAll('.section-header').forEach(header => {
-    header.addEventListener('click', function() {
-        const sectionName = this.dataset.section;
-        const content = document.getElementById(sectionName + '-content');
-        
-        // Toggle this section
-        this.classList.toggle('collapsed');
-        content.classList.toggle('collapsed');
+// Section toggle functionality
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.section-header').forEach(header => {
+        header.addEventListener('click', function() {
+            const sectionName = this.dataset.section;
+            const content = document.getElementById(sectionName + '-content');
+            
+            // Toggle this section
+            this.classList.toggle('collapsed');
+            content.classList.toggle('collapsed');
+        });
     });
 });   
 map.on('load', function() {
