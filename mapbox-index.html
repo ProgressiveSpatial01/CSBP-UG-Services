@@ -431,18 +431,6 @@ geolocate.on('geolocate', function() {
     geolocate._watchState = 'OFF';
 });
 
-// Section toggle functionality
-document.querySelectorAll('.section-header').forEach(header => {
-    header.addEventListener('click', function() {
-        const sectionName = this.dataset.section;
-        const content = document.getElementById(sectionName + '-content');
-        
-        // Toggle this section
-        this.classList.toggle('collapsed');
-        content.classList.toggle('collapsed');
-    });
-}); // <-- CLOSE THE FOREACH HERE
-
 // Add search
 map.addControl(
     new MapboxGeocoder({
