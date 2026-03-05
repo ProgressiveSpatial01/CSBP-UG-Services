@@ -1374,6 +1374,114 @@ function calculatePolygonArea(coords) {
         groupDiv.appendChild(groupLayers);
         layerList.appendChild(groupDiv);
     });
+	
+	});
+    
+    // Add uploaded layers section if any exist
+    const uploadedLayers = JSON.parse(localStorage.getItem('uploadedLayers') || '{}');
+    if (Object.keys(uploadedLayers).length > 0) {
+        const uploadedGroupDiv = document.createElement('div');
+        uploadedGroupDiv.className = 'layer-group';
+        
+        const uploadedGroupTitle = document.createElement('div');
+        uploadedGroupTitle.className = 'layer-group-title';
+        
+        const uploadedTitleText = document.createElement('span');
+        uploadedTitleText.textContent = '📤 Uploaded Layers';
+        
+        const uploadedToggleIcon = document.createElement('span');
+        uploadedToggleIcon.className = 'toggle-icon';
+        uploadedToggleIcon.textContent = '▼';
+        
+        uploadedGroupTitle.appendChild(uploadedTitleText);
+        uploadedGroupTitle.appendChild(uploadedToggleIcon);
+        
+        const uploadedGroupLayers = document.createElement('div');
+        uploadedGroupLayers.className = 'layer-group-layers';
+        
+        Object.keys(uploadedLayers).forEach(layerName => {
+            const layer = uploadedLayers[layerName];
+            const layerId = layerName.replace(/\s+/g, '-').toLowerCase();
+            
+            const layerDiv = document.createElement('div');
+            layerDiv.className = 'layer-item';
+            layerDiv.style.display = 'flex';
+            layerDiv.style.alignItems = 'center';
+            layerDiv.style.justifyContent = 'space-between';
+            
+            const leftSide = document.createElement('div');
+            leftSide.style.display = 'flex';
+            leftSide.style.alignItems = 'center';
+            leftSide.style.flex = '1';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.id = `toggle-${layerId}`;
+            checkbox.checked = true;
+            checkbox.addEventListener('change', function() {
+                const visibility = this.checked ? 'visible' : 'none';
+                if (map.getLayer(layerId)) {
+                    map.setLayoutProperty(layerId, 'visibility', visibility);
+                }
+            });
+            
+            const label = document.createElement('label');
+            label.htmlFor = `toggle-${layerId}`;
+            label.style.cursor = 'pointer';
+            
+            const colorIndicator = document.createElement('span');
+            colorIndicator.className = 'color-indicator';
+            colorIndicator.style.backgroundColor = layer.color;
+            
+            label.appendChild(colorIndicator);
+            label.appendChild(document.createTextNode(layerName));
+            
+            leftSide.appendChild(checkbox);
+            leftSide.appendChild(label);
+            
+            // Add delete button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = '🗑️';
+            deleteBtn.style.cssText = 'border: none; background: #ff4444; color: white; padding: 4px 8px; border-radius: 3px; cursor: pointer; font-size: 12px;';
+            deleteBtn.title = 'Delete layer';
+            deleteBtn.onclick = function(e) {
+                e.stopPropagation();
+                if (confirm(`Delete "${layerName}"?`)) {
+                    // Remove from map
+                    if (map.getLayer(layerId)) {
+                        map.removeLayer(layerId);
+                        map.removeSource(layerId);
+                    }
+                    
+                    // Remove from localStorage
+                    const stored = JSON.parse(localStorage.getItem('uploadedLayers') || '{}');
+                    delete stored[layerName];
+                    localStorage.setItem('uploadedLayers', JSON.stringify(stored));
+                    
+                    // Remove from UI
+                    layerDiv.remove();
+                    
+                    // If no more uploaded layers, remove the whole section
+                    if (Object.keys(stored).length === 0) {
+                        uploadedGroupDiv.remove();
+                    }
+                }
+            };
+            
+            layerDiv.appendChild(leftSide);
+            layerDiv.appendChild(deleteBtn);
+            uploadedGroupLayers.appendChild(layerDiv);
+        });
+        
+        uploadedGroupTitle.onclick = function() {
+            uploadedGroupLayers.classList.toggle('hidden');
+            uploadedGroupTitle.classList.toggle('collapsed');
+        };
+        
+        uploadedGroupDiv.appendChild(uploadedGroupTitle);
+        uploadedGroupDiv.appendChild(uploadedGroupLayers);
+        layerList.appendChild(uploadedGroupDiv);
+    }
 }
 
 function addLayerToControl(container, layer) {

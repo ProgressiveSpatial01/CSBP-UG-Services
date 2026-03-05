@@ -349,7 +349,7 @@
         </div>
     </div>
     
-    <div id='preview-section' class='hidden'>
+<div id='preview-section' class='hidden'>
         <div class='layer-preview'>
             <strong>Preview:</strong>
             <div class='layer-preview-item'>
@@ -365,7 +365,13 @@
         </div>
     </div>
     
-<button id='upload-btn' disabled>Upload to Map</button>
+    <button id='upload-btn' disabled>Upload to Map</button>
+    
+    <!-- NEW: Manage Uploaded Layers Section -->
+    <div class='upload-section' id='manage-section' style='display: none;'>
+        <h3>Manage Uploaded Layers</h3>
+        <div id='uploaded-layers-list'></div>
+    </div>
     
     <div style='margin-top: 15px;'>
         <a href='mapbox-index.html' style='display: block; text-align: center; padding: 10px; background: #f0f0f0; color: #0080ff; text-decoration: none; border-radius: 4px; font-size: 13px; font-weight: bold; border: 1px solid #0080ff;'>
@@ -487,43 +493,96 @@
         }
     });
     
-    function handleFileSelect(file) {
-        if (!file.name.toLowerCase().endsWith('.kml')) {
-            showStatus('Please select a KML file', 'error');
-            return;
+function handleFileSelect(file) {
+    if (!file.name.toLowerCase().endsWith('.kml')) {
+        showStatus('Please select a KML file', 'error');
+        return;
+    }
+    
+    uploadedFile = file;
+    document.getElementById('file-name').textContent = file.name;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const kmlText = e.target.result;
+            const parser = new DOMParser();
+            const kml = parser.parseFromString(kmlText, 'text/xml');
+            
+            // Convert KML to GeoJSON
+            uploadedGeoJSON = toGeoJSON.kml(kml);
+            
+            // Extract color from KML if available
+            const defaultColor = extractColorFromKML(kml);
+            if (defaultColor) {
+                document.getElementById('new-layer-color').value = defaultColor;
+            }
+            
+            const featureCount = uploadedGeoJSON.features ? uploadedGeoJSON.features.length : 0;
+            document.getElementById('feature-count').textContent = featureCount;
+            document.getElementById('file-info').classList.remove('hidden');
+            document.getElementById('upload-btn').disabled = false;
+            
+            // Extract available attributes
+            extractAttributes(uploadedGeoJSON);
+            
+            showStatus(`KML loaded successfully: ${featureCount} features`, 'success');
+            updatePreview();
+			
+			showStatus(`Layer "${layerName}" ${action === 'replace' ? 'replaced' : 'added'} successfully!`, 'success');
+        
+        // Refresh the manage section
+        displayUploadedLayers();
+            
+        } catch (error) {
+            showStatus('Error parsing KML file: ' + error.message, 'error');
+            console.error(error);
+        }
+    };
+    reader.readAsText(file);
+}
+
+function extractColorFromKML(kml) {
+    // Try to find color in KML styles
+    const styles = kml.getElementsByTagName('Style');
+    
+    for (let style of styles) {
+        // Check LineStyle color
+        const lineStyle = style.getElementsByTagName('LineStyle')[0];
+        if (lineStyle) {
+            const colorElement = lineStyle.getElementsByTagName('color')[0];
+            if (colorElement) {
+                const kmlColor = colorElement.textContent;
+                // KML color format is aabbggrr (opacity, blue, green, red)
+                // Convert to #rrggbb
+                if (kmlColor.length === 8) {
+                    const r = kmlColor.substring(6, 8);
+                    const g = kmlColor.substring(4, 6);
+                    const b = kmlColor.substring(2, 4);
+                    return '#' + r + g + b;
+                }
+            }
         }
         
-        uploadedFile = file;
-        document.getElementById('file-name').textContent = file.name;
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const kmlText = e.target.result;
-                const parser = new DOMParser();
-                const kml = parser.parseFromString(kmlText, 'text/xml');
-                
-                // Convert KML to GeoJSON
-                uploadedGeoJSON = toGeoJSON.kml(kml);
-                
-                const featureCount = uploadedGeoJSON.features ? uploadedGeoJSON.features.length : 0;
-                document.getElementById('feature-count').textContent = featureCount;
-                document.getElementById('file-info').classList.remove('hidden');
-                document.getElementById('upload-btn').disabled = false;
-                
-                // Extract available attributes
-                extractAttributes(uploadedGeoJSON);
-                
-                showStatus(`KML loaded successfully: ${featureCount} features`, 'success');
-                updatePreview();
-                
-            } catch (error) {
-                showStatus('Error parsing KML file: ' + error.message, 'error');
-                console.error(error);
+        // Check PolyStyle color (for polygons)
+        const polyStyle = style.getElementsByTagName('PolyStyle')[0];
+        if (polyStyle) {
+            const colorElement = polyStyle.getElementsByTagName('color')[0];
+            if (colorElement) {
+                const kmlColor = colorElement.textContent;
+                if (kmlColor.length === 8) {
+                    const r = kmlColor.substring(6, 8);
+                    const g = kmlColor.substring(4, 6);
+                    const b = kmlColor.substring(2, 4);
+                    return '#' + r + g + b;
+                }
             }
-        };
-        reader.readAsText(file);
+        }
     }
+    
+    // Default fallback
+    return '#0080ff';
+}
     
     // Radio button handling
     document.querySelectorAll('input[name="action"]').forEach(radio => {
@@ -867,6 +926,74 @@
         if (Object.keys(uploadedLayers).length > 0) {
             showStatus(`Loaded ${Object.keys(uploadedLayers).length} previously uploaded layers`, 'info');
         }
+		// Display uploaded layers for management
+    function displayUploadedLayers() {
+        const uploadedLayers = JSON.parse(localStorage.getItem('uploadedLayers') || '{}');
+        const manageSection = document.getElementById('manage-section');
+        const layersList = document.getElementById('uploaded-layers-list');
+        
+        if (Object.keys(uploadedLayers).length === 0) {
+            manageSection.style.display = 'none';
+            return;
+        }
+        
+        manageSection.style.display = 'block';
+        layersList.innerHTML = '';
+        
+        Object.keys(uploadedLayers).forEach(layerName => {
+            const layer = uploadedLayers[layerName];
+            
+            const layerItem = document.createElement('div');
+            layerItem.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f8f8f8; margin-bottom: 8px; border-radius: 4px;';
+            
+            const layerInfo = document.createElement('div');
+            layerInfo.style.flex = '1';
+            
+            const layerNameSpan = document.createElement('div');
+            layerNameSpan.style.fontWeight = 'bold';
+            layerNameSpan.textContent = layerName;
+            
+            const layerDetails = document.createElement('div');
+            layerDetails.style.fontSize = '12px';
+            layerDetails.style.color = '#666';
+            layerDetails.textContent = `Group: ${layer.group} | ${layer.geojson.features.length} features`;
+            
+            const colorBox = document.createElement('div');
+            colorBox.style.cssText = `width: 30px; height: 20px; background: ${layer.color}; border-radius: 3px; margin-left: 10px;`;
+            
+            layerInfo.appendChild(layerNameSpan);
+            layerInfo.appendChild(layerDetails);
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = '🗑️ Delete';
+            deleteBtn.style.cssText = 'background: #ff4444; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-left: 10px;';
+            deleteBtn.onclick = function() {
+                if (confirm(`Delete "${layerName}"? This cannot be undone.`)) {
+                    const stored = JSON.parse(localStorage.getItem('uploadedLayers') || '{}');
+                    delete stored[layerName];
+                    localStorage.setItem('uploadedLayers', JSON.stringify(stored));
+                    
+                    // Remove from map if present
+                    const layerId = layerName.replace(/\s+/g, '-').toLowerCase();
+                    if (map.getLayer(layerId)) {
+                        map.removeLayer(layerId);
+                        map.removeSource(layerId);
+                    }
+                    
+                    displayUploadedLayers();
+                    showStatus(`Deleted "${layerName}"`, 'success');
+                }
+            };
+            
+            layerItem.appendChild(layerInfo);
+            layerItem.appendChild(colorBox);
+            layerItem.appendChild(deleteBtn);
+            layersList.appendChild(layerItem);
+        });
+    }
+    
+    // Call on load
+    displayUploadedLayers();
     });
 </script>
 
