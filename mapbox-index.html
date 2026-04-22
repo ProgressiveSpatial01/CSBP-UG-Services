@@ -979,33 +979,52 @@ Object.keys(layerConfig).forEach(groupName => {
             }
         });
         
-        // Add click handler for popups with selected attributes
-        map.on('click', layerId, function(e) {
-            const props = e.features[0].properties;
-            
-            let popupHTML = `<h4>${layerName}</h4>`;
-            
-            if (layer.attributes && layer.attributes.length > 0) {
-                layer.attributes.forEach(attr => {
-                    if (props[attr] !== null && props[attr] !== undefined && props[attr] !== '') {
-                        popupHTML += `<div class="popup-row"><span class="popup-label">${attr}:</span><span class="popup-value">${props[attr]}</span></div>`;
-                    }
-                });
-            } else {
-                // Fallback to all properties if no attributes specified
-                Object.keys(props).forEach(key => {
-                    if (props[key] !== null && props[key] !== '') {
-                        popupHTML += `<div class="popup-row"><span class="popup-label">${key}:</span><span class="popup-value">${props[key]}</span></div>`;
-                    }
-                });
+// Add click handler for popups with selected attributes
+map.on('click', layerId, function(e) {
+    const props = e.features[0].properties;
+    
+    let popupHTML = `<h4>${layerName}</h4>`;
+    
+    if (layer.attributes && layer.attributes.length > 0) {
+        layer.attributes.forEach(attr => {
+            if (props[attr] !== null && props[attr] !== undefined && props[attr] !== '') {
+                // Clean up attribute name - remove prefixes and format
+                const cleanAttrName = cleanAttributeName(attr);
+                popupHTML += `<div class="popup-row"><span class="popup-label">${cleanAttrName}:</span><span class="popup-value">${props[attr]}</span></div>`;
             }
-            
-            new mapboxgl.Popup()
-                .setLngLat(e.lngLat)
-                .setHTML(popupHTML)
-                .addTo(map);
         });
-        
+    } else {
+        // Fallback to all properties if no attributes specified
+        Object.keys(props).forEach(key => {
+            if (props[key] !== null && props[key] !== '') {
+                const cleanAttrName = cleanAttributeName(key);
+                popupHTML += `<div class="popup-row"><span class="popup-label">${cleanAttrName}:</span><span class="popup-value">${props[key]}</span></div>`;
+            }
+        });
+    }
+    
+    new mapboxgl.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML(popupHTML)
+        .addTo(map);
+});
+
+function cleanAttributeName(name) {
+    // Remove common prefixes
+    let cleaned = name
+        .replace(/^BIM\.ServiceAtt\./i, '')
+        .replace(/^ServiceAtt_/i, '')
+        .replace(/^Service_/i, '');
+    
+    // Replace underscores with spaces
+    cleaned = cleaned.replace(/_/g, ' ');
+    
+    // Capitalize first letter of each word
+    cleaned = cleaned.replace(/\b\w/g, char => char.toUpperCase());
+    
+    return cleaned;
+}
+
         // Change cursor on hover
         map.on('mouseenter', layerId, function() {
             map.getCanvas().style.cursor = 'pointer';
