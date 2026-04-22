@@ -258,6 +258,51 @@
         .attr-checkbox {
             cursor: pointer;
         }
+        
+        .manage-layer-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background: #f8f8f8;
+            margin-bottom: 8px;
+            border-radius: 4px;
+        }
+        
+        .manage-layer-info {
+            flex: 1;
+        }
+        
+        .manage-layer-name {
+            font-weight: bold;
+        }
+        
+        .manage-layer-details {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .manage-color-box {
+            width: 30px;
+            height: 20px;
+            border-radius: 3px;
+            margin-left: 10px;
+        }
+        
+        .delete-btn {
+            background: #ff4444;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+            font-size: 12px;
+        }
+        
+        .delete-btn:hover {
+            background: #cc0000;
+        }
     </style>
 </head>
 <body>
@@ -349,7 +394,7 @@
         </div>
     </div>
     
-<div id='preview-section' class='hidden'>
+    <div id='preview-section' class='hidden'>
         <div class='layer-preview'>
             <strong>Preview:</strong>
             <div class='layer-preview-item'>
@@ -367,8 +412,7 @@
     
     <button id='upload-btn' disabled>Upload to Map</button>
     
-    <!-- NEW: Manage Uploaded Layers Section -->
-    <div class='upload-section' id='manage-section' style='display: none;'>
+    <div class='upload-section' id='manage-section' style='display: none; margin-top: 20px;'>
         <h3>Manage Uploaded Layers</h3>
         <div id='uploaded-layers-list'></div>
     </div>
@@ -378,6 +422,7 @@
             🗺️ View Main Map
         </a>
     </div>
+</div>
 
 <script>
     mapboxgl.accessToken = 'pk.eyJ1IjoicHJvZ3Jlc3NpdmVzcGF0aWFsMDEiLCJhIjoiY21saXk2ajY4MDd4NjNlbzk1aHh3ZWcxOCJ9.RvuZXciIFtGqGzwXiZnmbw';
@@ -398,9 +443,8 @@
     let availableAttributes = [];
     let selectedAttributes = [];
     let existingLayers = {};
-    let layerGroups = {};
     
-    // Load existing layer configuration from main map
+    // Layer configuration
     const layerConfig = {
         'As-Built UG Services': ['ASB Communications', 'ASB Cooling Water', 'ASB Power', 'ASB Sewer', 'ASB Stormwater'],
         'Located UG Services': ['LOC Abandoned Water', 'LOC Communications', 'LOC Fire Suppression', 'LOC Gas', 'LOC Power', 'LOC Steam', 'LOC Stormwater', 'LOC Unknown', 'LOC Water'],
@@ -493,189 +537,116 @@
         }
     });
     
-function handleFileSelect(file) {
-    if (!file.name.toLowerCase().endsWith('.kml')) {
-        showStatus('Please select a KML file', 'error');
-        return;
+    function handleFileSelect(file) {
+        if (!file.name.toLowerCase().endsWith('.kml')) {
+            showStatus('Please select a KML file', 'error');
+            return;
+        }
+        
+        uploadedFile = file;
+        document.getElementById('file-name').textContent = file.name;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const kmlText = e.target.result;
+                const parser = new DOMParser();
+                const kml = parser.parseFromString(kmlText, 'text/xml');
+                
+                // Convert KML to GeoJSON
+                uploadedGeoJSON = toGeoJSON.kml(kml);
+                
+                // Extract color from KML if available
+                const defaultColor = extractColorFromKML(kml);
+                console.log('Extracted color from KML:', defaultColor);
+                if (defaultColor) {
+                    document.getElementById('new-layer-color').value = defaultColor;
+                }
+                
+                const featureCount = uploadedGeoJSON.features ? uploadedGeoJSON.features.length : 0;
+                document.getElementById('feature-count').textContent = featureCount;
+                document.getElementById('file-info').classList.remove('hidden');
+                document.getElementById('upload-btn').disabled = false;
+                
+                // Extract available attributes
+                extractAttributes(uploadedGeoJSON);
+                
+                showStatus(`KML loaded successfully: ${featureCount} features`, 'success');
+                updatePreview();
+                
+            } catch (error) {
+                showStatus('Error parsing KML file: ' + error.message, 'error');
+                console.error(error);
+            }
+        };
+        reader.readAsText(file);
     }
     
-    uploadedFile = file;
-    document.getElementById('file-name').textContent = file.name;
-    
-    const reader = new FileReader();
-    reader.onload = function(e) {
-        try {
-            const kmlText = e.target.result;
-            const parser = new DOMParser();
-            const kml = parser.parseFromString(kmlText, 'text/xml');
-            
-            // Convert KML to GeoJSON
-            uploadedGeoJSON = toGeoJSON.kml(kml);
-            
-            // Extract color from KML if available
-            const defaultColor = extractColorFromKML(kml);
-            console.log('Extracted color from KML:', defaultColor);
-            if (defaultColor) {
-                document.getElementById('new-layer-color').value = defaultColor;
+    function extractColorFromKML(kml) {
+        console.log('Extracting color from KML...');
+        
+        // Method 1: Check Style elements in KML
+        const styles = kml.getElementsByTagName('Style');
+        console.log('Found styles:', styles.length);
+        
+        for (let style of styles) {
+            const lineStyle = style.getElementsByTagName('LineStyle')[0];
+            if (lineStyle) {
+                const colorElement = lineStyle.getElementsByTagName('color')[0];
+                if (colorElement) {
+                    const kmlColor = colorElement.textContent.trim();
+                    console.log('Found LineStyle color:', kmlColor);
+                    // KML color format is aabbggrr (alpha, blue, green, red)
+                    if (kmlColor.length === 8) {
+                        const r = kmlColor.substring(6, 8);
+                        const g = kmlColor.substring(4, 6);
+                        const b = kmlColor.substring(2, 4);
+                        const hexColor = '#' + r + g + b;
+                        console.log('Converted to hex:', hexColor);
+                        return hexColor;
+                    }
+                }
             }
             
-            const featureCount = uploadedGeoJSON.features ? uploadedGeoJSON.features.length : 0;
-            document.getElementById('feature-count').textContent = featureCount;
-            document.getElementById('file-info').classList.remove('hidden');
-            document.getElementById('upload-btn').disabled = false;
-            
-            // Extract available attributes
-            extractAttributes(uploadedGeoJSON);
-            
-            showStatus(`KML loaded successfully: ${featureCount} features`, 'success');
-            updatePreview();
-            
-        } catch (error) {
-            showStatus('Error parsing KML file: ' + error.message, 'error');
-            console.error(error);
-        }
-    };
-    reader.readAsText(file);
-}
-
-function extractColorFromKML(kml) {
-    console.log('Extracting color from KML...');
-    
-    // Method 1: Check Style elements in KML
-    const styles = kml.getElementsByTagName('Style');
-    console.log('Found styles:', styles.length);
-    
-    for (let style of styles) {
-        const lineStyle = style.getElementsByTagName('LineStyle')[0];
-        if (lineStyle) {
-            const colorElement = lineStyle.getElementsByTagName('color')[0];
-            if (colorElement) {
-                const kmlColor = colorElement.textContent.trim();
-                console.log('Found LineStyle color:', kmlColor);
-                // KML color format is aabbggrr (alpha, blue, green, red)
-                if (kmlColor.length === 8) {
-                    const r = kmlColor.substring(6, 8);
-                    const g = kmlColor.substring(4, 6);
-                    const b = kmlColor.substring(2, 4);
-                    const hexColor = '#' + r + g + b;
-                    console.log('Converted to hex:', hexColor);
-                    return hexColor;
+            // Also check PolyStyle
+            const polyStyle = style.getElementsByTagName('PolyStyle')[0];
+            if (polyStyle) {
+                const colorElement = polyStyle.getElementsByTagName('color')[0];
+                if (colorElement) {
+                    const kmlColor = colorElement.textContent.trim();
+                    console.log('Found PolyStyle color:', kmlColor);
+                    if (kmlColor.length === 8) {
+                        const r = kmlColor.substring(6, 8);
+                        const g = kmlColor.substring(4, 6);
+                        const b = kmlColor.substring(2, 4);
+                        const hexColor = '#' + r + g + b;
+                        console.log('Converted to hex:', hexColor);
+                        return hexColor;
+                    }
                 }
             }
         }
         
-        // Also check PolyStyle
-        const polyStyle = style.getElementsByTagName('PolyStyle')[0];
-        if (polyStyle) {
-            const colorElement = polyStyle.getElementsByTagName('color')[0];
-            if (colorElement) {
-                const kmlColor = colorElement.textContent.trim();
-                console.log('Found PolyStyle color:', kmlColor);
-                if (kmlColor.length === 8) {
-                    const r = kmlColor.substring(6, 8);
-                    const g = kmlColor.substring(4, 6);
-                    const b = kmlColor.substring(2, 4);
-                    const hexColor = '#' + r + g + b;
-                    console.log('Converted to hex:', hexColor);
-                    return hexColor;
-                }
-            }
-        }
-    }
-    
-    // Method 2: Check if toGeoJSON added color to properties
-    if (uploadedGeoJSON && uploadedGeoJSON.features && uploadedGeoJSON.features.length > 0) {
-        const firstFeature = uploadedGeoJSON.features[0];
-        console.log('First feature properties:', firstFeature.properties);
-        
-        if (firstFeature.properties) {
-            // Check various color property names
-            const colorProps = ['stroke', 'stroke-color', 'color', 'fill'];
-            for (let prop of colorProps) {
-                if (firstFeature.properties[prop]) {
-                    console.log(`Found color in ${prop}:`, firstFeature.properties[prop]);
-                    return firstFeature.properties[prop];
-                }
-            }
-        }
-    }
-    
-    console.log('No color found, using default #0080ff');
-    return '#0080ff';
-}
-
-// Extract color from KML if available
-const defaultColor = extractColorFromKML(kml);
-console.log('Extracted color from KML:', defaultColor); // ADD THIS LINE
-if (defaultColor) {
-    document.getElementById('new-layer-color').value = defaultColor;
-}
-
-function extractColorFromKML(kml) {
-    console.log('Extracting color from KML...');
-    
-    // Method 1: Check Style elements in KML
-    const styles = kml.getElementsByTagName('Style');
-    console.log('Found styles:', styles.length);
-    
-    for (let style of styles) {
-        const lineStyle = style.getElementsByTagName('LineStyle')[0];
-        if (lineStyle) {
-            const colorElement = lineStyle.getElementsByTagName('color')[0];
-            if (colorElement) {
-                const kmlColor = colorElement.textContent.trim();
-                console.log('Found LineStyle color:', kmlColor);
-                // KML color format is aabbggrr (alpha, blue, green, red)
-                if (kmlColor.length === 8) {
-                    const r = kmlColor.substring(6, 8);
-                    const g = kmlColor.substring(4, 6);
-                    const b = kmlColor.substring(2, 4);
-                    const hexColor = '#' + r + g + b;
-                    console.log('Converted to hex:', hexColor);
-                    return hexColor;
+        // Method 2: Check if toGeoJSON added color to properties
+        if (uploadedGeoJSON && uploadedGeoJSON.features && uploadedGeoJSON.features.length > 0) {
+            const firstFeature = uploadedGeoJSON.features[0];
+            console.log('First feature properties:', firstFeature.properties);
+            
+            if (firstFeature.properties) {
+                // Check various color property names
+                const colorProps = ['stroke', 'stroke-color', 'color', 'fill'];
+                for (let prop of colorProps) {
+                    if (firstFeature.properties[prop]) {
+                        console.log(`Found color in ${prop}:`, firstFeature.properties[prop]);
+                        return firstFeature.properties[prop];
+                    }
                 }
             }
         }
         
-        // Also check PolyStyle
-        const polyStyle = style.getElementsByTagName('PolyStyle')[0];
-        if (polyStyle) {
-            const colorElement = polyStyle.getElementsByTagName('color')[0];
-            if (colorElement) {
-                const kmlColor = colorElement.textContent.trim();
-                console.log('Found PolyStyle color:', kmlColor);
-                if (kmlColor.length === 8) {
-                    const r = kmlColor.substring(6, 8);
-                    const g = kmlColor.substring(4, 6);
-                    const b = kmlColor.substring(2, 4);
-                    const hexColor = '#' + r + g + b;
-                    console.log('Converted to hex:', hexColor);
-                    return hexColor;
-                }
-            }
-        }
+        console.log('No color found, using default #0080ff');
+        return '#0080ff';
     }
-    
-    // Method 2: Check if toGeoJSON added color to properties
-    if (uploadedGeoJSON && uploadedGeoJSON.features && uploadedGeoJSON.features.length > 0) {
-        const firstFeature = uploadedGeoJSON.features[0];
-        console.log('First feature properties:', firstFeature.properties);
-        
-        if (firstFeature.properties) {
-            // Check various color property names
-            const colorProps = ['stroke', 'stroke-color', 'color', 'fill'];
-            for (let prop of colorProps) {
-                if (firstFeature.properties[prop]) {
-                    console.log(`Found color in ${prop}:`, firstFeature.properties[prop]);
-                    return firstFeature.properties[prop];
-                }
-            }
-        }
-    }
-    
-    console.log('No color found, using default #0080ff');
-    return '#0080ff';
-}
     
     // Radio button handling
     document.querySelectorAll('input[name="action"]').forEach(radio => {
@@ -901,6 +872,9 @@ function extractColorFromKML(kml) {
         
         // Store in localStorage for persistence
         saveToLocalStorage(layerName, groupName, layerColor, uploadedGeoJSON, selectedAttributes);
+        
+        // Refresh the manage section
+        displayUploadedLayers();
     });
     
     function addLayerToMap(layerName, color, geojson, attributes, isReplace) {
@@ -997,29 +971,6 @@ function extractColorFromKML(kml) {
         localStorage.setItem('uploadedLayers', JSON.stringify(uploadedLayers));
     }
     
-    function showStatus(message, type) {
-        const container = document.getElementById('status-container');
-        container.innerHTML = `<div class="status-message ${type}">${message}</div>`;
-        setTimeout(() => {
-            container.innerHTML = '';
-        }, 5000);
-    }
-    
-    // Initialize
-    map.on('load', function() {
-        initializeUI();
-        
-        // Load any previously uploaded layers
-        const uploadedLayers = JSON.parse(localStorage.getItem('uploadedLayers') || '{}');
-        Object.keys(uploadedLayers).forEach(layerName => {
-            const layer = uploadedLayers[layerName];
-            addLayerToMap(layerName, layer.color, layer.geojson, layer.attributes || [], false);
-        });
-        
-        if (Object.keys(uploadedLayers).length > 0) {
-            showStatus(`Loaded ${Object.keys(uploadedLayers).length} previously uploaded layers`, 'info');
-        }
-		// Display uploaded layers for management
     function displayUploadedLayers() {
         const uploadedLayers = JSON.parse(localStorage.getItem('uploadedLayers') || '{}');
         const manageSection = document.getElementById('manage-section');
@@ -1037,29 +988,29 @@ function extractColorFromKML(kml) {
             const layer = uploadedLayers[layerName];
             
             const layerItem = document.createElement('div');
-            layerItem.style.cssText = 'display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #f8f8f8; margin-bottom: 8px; border-radius: 4px;';
+            layerItem.className = 'manage-layer-item';
             
             const layerInfo = document.createElement('div');
-            layerInfo.style.flex = '1';
+            layerInfo.className = 'manage-layer-info';
             
             const layerNameSpan = document.createElement('div');
-            layerNameSpan.style.fontWeight = 'bold';
+            layerNameSpan.className = 'manage-layer-name';
             layerNameSpan.textContent = layerName;
             
             const layerDetails = document.createElement('div');
-            layerDetails.style.fontSize = '12px';
-            layerDetails.style.color = '#666';
+            layerDetails.className = 'manage-layer-details';
             layerDetails.textContent = `Group: ${layer.group} | ${layer.geojson.features.length} features`;
             
             const colorBox = document.createElement('div');
-            colorBox.style.cssText = `width: 30px; height: 20px; background: ${layer.color}; border-radius: 3px; margin-left: 10px;`;
+            colorBox.className = 'manage-color-box';
+            colorBox.style.background = layer.color;
             
             layerInfo.appendChild(layerNameSpan);
             layerInfo.appendChild(layerDetails);
             
             const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
             deleteBtn.textContent = '🗑️ Delete';
-            deleteBtn.style.cssText = 'background: #ff4444; color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; margin-left: 10px;';
             deleteBtn.onclick = function() {
                 if (confirm(`Delete "${layerName}"? This cannot be undone.`)) {
                     const stored = JSON.parse(localStorage.getItem('uploadedLayers') || '{}');
@@ -1085,8 +1036,31 @@ function extractColorFromKML(kml) {
         });
     }
     
-    // Call on load
-    displayUploadedLayers();
+    function showStatus(message, type) {
+        const container = document.getElementById('status-container');
+        container.innerHTML = `<div class="status-message ${type}">${message}</div>`;
+        setTimeout(() => {
+            container.innerHTML = '';
+        }, 5000);
+    }
+    
+    // Initialize
+    map.on('load', function() {
+        initializeUI();
+        
+        // Load any previously uploaded layers
+        const uploadedLayers = JSON.parse(localStorage.getItem('uploadedLayers') || '{}');
+        Object.keys(uploadedLayers).forEach(layerName => {
+            const layer = uploadedLayers[layerName];
+            addLayerToMap(layerName, layer.color, layer.geojson, layer.attributes || [], false);
+        });
+        
+        if (Object.keys(uploadedLayers).length > 0) {
+            showStatus(`Loaded ${Object.keys(uploadedLayers).length} previously uploaded layers`, 'info');
+        }
+        
+        // Display uploaded layers management section
+        displayUploadedLayers();
     });
 </script>
 
