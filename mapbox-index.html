@@ -1091,6 +1091,7 @@ function stopMeasuring() {
     areaBtn.textContent = 'Area';
 }
 
+
 function clearMeasurement() {
     measurePoints = [];
     measuring = false;
@@ -1594,6 +1595,8 @@ function toggleSubgroupLayers(groupName, subgroupName) {
         }
     });
 }
+}); // <-- CLOSE map.on('load') HERE
+
 </script>
 
 </body>
