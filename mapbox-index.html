@@ -1592,10 +1592,10 @@ function toggleSubgroupLayers(groupName, subgroupName) {
             if (map.getLayer(layerId)) {
                 map.setLayoutProperty(layerId, 'visibility', newState ? 'visible' : 'none');
             }
-        }
+        };
     });
 }
-}); // <-- CLOSE map.on('load') HERE
+}); // <-- CLOSE map.on('load') HERE - ONLY ONE CLOSING
 
 </script>
 
