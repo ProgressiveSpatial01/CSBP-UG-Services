@@ -821,7 +821,24 @@ document.addEventListener('DOMContentLoaded', function() {
             content.classList.toggle('collapsed');
         });
     });
-});   
+}); 
+
+function cleanAttributeName(name) {
+    // Remove common prefixes
+    let cleaned = name
+        .replace(/^BIM\.ServiceAtt\./i, '')
+        .replace(/^ServiceAtt_/i, '')
+        .replace(/^Service_/i, '');
+    
+    // Replace underscores with spaces
+    cleaned = cleaned.replace(/_/g, ' ');
+    
+    // Capitalize first letter of each word
+    cleaned = cleaned.replace(/\b\w/g, char => char.toUpperCase());
+    
+    return cleaned;
+}
+
 map.on('load', function() {
     // Add drone imagery tiles
     map.addSource('drone-tiles', {
@@ -880,50 +897,34 @@ Object.keys(layerConfig).forEach(groupName => {
                     }
                 });
                 
-                // Add click handler for popups
-                map.on('click', layerId, function(e) {
-                    const props = e.features[0].properties;
-                    
-                    let popupHTML = `<h4>${layer.name}</h4>`;
-                    
-                    if (props.ServiceAtt_Asset_Owner) {
-                        popupHTML += `<div class="popup-row"><span class="popup-label">Owner:</span><span class="popup-value">${props.ServiceAtt_Asset_Owner}</span></div>`;
-                    }
-                    if (props.ServiceAtt_Material) {
-                        popupHTML += `<div class="popup-row"><span class="popup-label">Material:</span><span class="popup-value">${props.ServiceAtt_Material}</span></div>`;
-                    }
-                    if (props.ServiceAtt_Size) {
-                        popupHTML += `<div class="popup-row"><span class="popup-label">Size:</span><span class="popup-value">${props.ServiceAtt_Size}</span></div>`;
-                    }
-                    if (props.ServiceAtt_SurveyType) {
-                        popupHTML += `<div class="popup-row"><span class="popup-label">Survey Type:</span><span class="popup-value">${props.ServiceAtt_SurveyType}</span></div>`;
-                    }
-                    if (props.ServiceAtt_Class) {
-                        popupHTML += `<div class="popup-row"><span class="popup-label">Class:</span><span class="popup-value">${props.ServiceAtt_Class}</span></div>`;
-                    }
-                    if (props.ServiceAtt_Locator) {
-                        popupHTML += `<div class="popup-row"><span class="popup-label">Locator:</span><span class="popup-value">${props.ServiceAtt_Locator}</span></div>`;
-                    }
-                    
-                    new mapboxgl.Popup()
-                        .setLngLat(e.lngLat)
-                        .setHTML(popupHTML)
-                        .addTo(map);
-                });
-                
-                // Change cursor on hover
-                map.on('mouseenter', layerId, function() {
-                    map.getCanvas().style.cursor = 'pointer';
-                });
-                
-                map.on('mouseleave', layerId, function() {
-                    map.getCanvas().style.cursor = '';
-                });
-            })
-            .catch(error => {
-                console.error(`Error loading ${layer.name}:`, error);
-            });
-    };
+// Add click handler for popups
+map.on('click', layerId, function(e) {
+    const props = e.features[0].properties;
+    
+    let popupHTML = `<h4>${layer.name}</h4>`;
+    
+    // Show all properties dynamically with cleaned names
+    Object.keys(props).forEach(key => {
+        if (props[key] !== null && props[key] !== '' && props[key] !== undefined) {
+            const cleanAttrName = cleanAttributeName(key);
+            popupHTML += `<div class="popup-row"><span class="popup-label">${cleanAttrName}:</span><span class="popup-value">${props[key]}</span></div>`;
+        }
+    });
+    
+    new mapboxgl.Popup()
+        .setLngLat(e.lngLat)
+        .setHTML(popupHTML)
+        .addTo(map);
+});
+
+// Change cursor on hover
+map.on('mouseenter', layerId, function() {
+    map.getCanvas().style.cursor = 'pointer';
+});
+
+map.on('mouseleave', layerId, function() {
+    map.getCanvas().style.cursor = '';
+});
     
     // Load layers from group
     if (group.subgroups) {
@@ -988,7 +989,6 @@ map.on('click', layerId, function(e) {
     if (layer.attributes && layer.attributes.length > 0) {
         layer.attributes.forEach(attr => {
             if (props[attr] !== null && props[attr] !== undefined && props[attr] !== '') {
-                // Clean up attribute name - remove prefixes and format
                 const cleanAttrName = cleanAttributeName(attr);
                 popupHTML += `<div class="popup-row"><span class="popup-label">${cleanAttrName}:</span><span class="popup-value">${props[attr]}</span></div>`;
             }
