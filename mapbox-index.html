@@ -995,29 +995,19 @@ Object.keys(layerConfig).forEach(groupName => {
             }
         });
         
-// Add click handler for popups with selected attributes
+// Add click handler for popups
 map.on('click', layerId, function(e) {
     const props = e.features[0].properties;
     
-    let popupHTML = `<h4>${layerName}</h4>`;
+    let popupHTML = `<h4>${layer.name}</h4>`;
     
-    if (layer.attributes && layer.attributes.length > 0) {
-        layer.attributes.forEach(attr => {
-            if (props[attr] !== null && props[attr] !== undefined && props[attr] !== '') {
-                // Clean up attribute name - remove prefixes and format
-                const cleanAttrName = cleanAttributeName(attr);
-                popupHTML += `<div class="popup-row"><span class="popup-label">${cleanAttrName}:</span><span class="popup-value">${props[attr]}</span></div>`;
-            }
-        });
-    } else {
-        // Fallback to all properties if no attributes specified
-        Object.keys(props).forEach(key => {
-            if (props[key] !== null && props[key] !== '') {
-                const cleanAttrName = cleanAttributeName(key);
-                popupHTML += `<div class="popup-row"><span class="popup-label">${cleanAttrName}:</span><span class="popup-value">${props[key]}</span></div>`;
-            }
-        });
-    }
+    // Show all properties dynamically with cleaned names
+    Object.keys(props).forEach(key => {
+        if (props[key] !== null && props[key] !== '' && props[key] !== undefined) {
+            const cleanAttrName = cleanAttributeName(key);
+            popupHTML += `<div class="popup-row"><span class="popup-label">${cleanAttrName}:</span><span class="popup-value">${props[key]}</span></div>`;
+        }
+    });
     
     new mapboxgl.Popup()
         .setLngLat(e.lngLat)
@@ -1025,39 +1015,14 @@ map.on('click', layerId, function(e) {
         .addTo(map);
 });
 
-function cleanAttributeName(name) {
-    // Remove common prefixes
-    let cleaned = name
-        .replace(/^BIM\.ServiceAtt\./i, '')
-        .replace(/^ServiceAtt_/i, '')
-        .replace(/^Service_/i, '');
-    
-    // Replace underscores with spaces
-    cleaned = cleaned.replace(/_/g, ' ');
-    
-    // Capitalize first letter of each word
-    cleaned = cleaned.replace(/\b\w/g, char => char.toUpperCase());
-    
-    return cleaned;
-}
+// Change cursor on hover
+map.on('mouseenter', layerId, function() {
+    map.getCanvas().style.cursor = 'pointer';
+});
 
-        // Change cursor on hover
-        map.on('mouseenter', layerId, function() {
-            map.getCanvas().style.cursor = 'pointer';
-        });
-        
-        map.on('mouseleave', layerId, function() {
-            map.getCanvas().style.cursor = '';
-        });
-        
-        console.log(`Loaded uploaded layer: ${layerName}`);
-    });
-    
-    if (Object.keys(uploadedLayers).length > 0) {
-        console.log(`Loaded ${Object.keys(uploadedLayers).length} uploaded layers from localStorage`);
-    }
-    
-}); // <-- CLOSE map.on('load') HERE - ONLY ONE CLOSING
+map.on('mouseleave', layerId, function() {
+    map.getCanvas().style.cursor = '';
+});
 
 // Measurement tool (OUTSIDE map.on('load'))
 let measurePoints = [];
