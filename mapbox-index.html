@@ -1592,8 +1592,8 @@ function toggleSubgroupLayers(groupName, subgroupName) {
             if (map.getLayer(layerId)) {
                 map.setLayoutProperty(layerId, 'visibility', newState ? 'visible' : 'none');
             }
-        };
-    });
+        }  // <-- Just } here (closes the if (checkbox))
+    });  // <-- This closes the forEach
 }
 }); // <-- CLOSE map.on('load') HERE - ONLY ONE CLOSING
 
