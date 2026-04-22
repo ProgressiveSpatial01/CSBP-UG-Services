@@ -1025,7 +1025,28 @@
                     }
                     
                     displayUploadedLayers();
-                    showStatus(`Deleted "${layerName}"`, 'success');
+                    showStatus(`Layer "${layerName}" ${action === 'replace' ? 'replaced' : 'added'} successfully!`, 'success');
+
+// Store in localStorage for persistence
+saveToLocalStorage(layerName, groupName, layerColor, uploadedGeoJSON, selectedAttributes);
+
+// Refresh the manage section
+displayUploadedLayers();
+
+// Refresh the dropdowns to include the newly uploaded layer
+const existingLayersSelect = document.getElementById('existing-layers');
+const currentValue = existingLayersSelect.value;
+existingLayersSelect.innerHTML = '<option value="">Select layer to replace...</option>';
+
+const existingGroupsSelect = document.getElementById('existing-groups');
+const currentGroupValue = existingGroupsSelect.value;
+existingGroupsSelect.innerHTML = '<option value="">Select group...</option>';
+
+initializeUI();
+
+// Restore selections if still valid
+if (currentValue) existingLayersSelect.value = currentValue;
+if (currentGroupValue) existingGroupsSelect.value = currentGroupValue;
                 }
             };
             
