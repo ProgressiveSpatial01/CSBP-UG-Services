@@ -1009,21 +1009,6 @@ map.on('click', layerId, function(e) {
         .addTo(map);
 });
 
-function cleanAttributeName(name) {
-    // Remove common prefixes
-    let cleaned = name
-        .replace(/^BIM\.ServiceAtt\./i, '')
-        .replace(/^ServiceAtt_/i, '')
-        .replace(/^Service_/i, '');
-    
-    // Replace underscores with spaces
-    cleaned = cleaned.replace(/_/g, ' ');
-    
-    // Capitalize first letter of each word
-    cleaned = cleaned.replace(/\b\w/g, char => char.toUpperCase());
-    
-    return cleaned;
-}
 
         // Change cursor on hover
         map.on('mouseenter', layerId, function() {
