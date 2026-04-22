@@ -514,6 +514,7 @@ function handleFileSelect(file) {
             
             // Extract color from KML if available
             const defaultColor = extractColorFromKML(kml);
+            console.log('Extracted color from KML:', defaultColor);
             if (defaultColor) {
                 document.getElementById('new-layer-color').value = defaultColor;
             }
@@ -528,11 +529,6 @@ function handleFileSelect(file) {
             
             showStatus(`KML loaded successfully: ${featureCount} features`, 'success');
             updatePreview();
-			
-			showStatus(`Layer "${layerName}" ${action === 'replace' ? 'replaced' : 'added'} successfully!`, 'success');
-        
-        // Refresh the manage section
-        displayUploadedLayers();
             
         } catch (error) {
             showStatus('Error parsing KML file: ' + error.message, 'error');
@@ -540,9 +536,73 @@ function handleFileSelect(file) {
         }
     };
     reader.readAsText(file);
-	
-	// Convert KML to GeoJSON
-uploadedGeoJSON = toGeoJSON.kml(kml);
+}
+
+function extractColorFromKML(kml) {
+    console.log('Extracting color from KML...');
+    
+    // Method 1: Check Style elements in KML
+    const styles = kml.getElementsByTagName('Style');
+    console.log('Found styles:', styles.length);
+    
+    for (let style of styles) {
+        const lineStyle = style.getElementsByTagName('LineStyle')[0];
+        if (lineStyle) {
+            const colorElement = lineStyle.getElementsByTagName('color')[0];
+            if (colorElement) {
+                const kmlColor = colorElement.textContent.trim();
+                console.log('Found LineStyle color:', kmlColor);
+                // KML color format is aabbggrr (alpha, blue, green, red)
+                if (kmlColor.length === 8) {
+                    const r = kmlColor.substring(6, 8);
+                    const g = kmlColor.substring(4, 6);
+                    const b = kmlColor.substring(2, 4);
+                    const hexColor = '#' + r + g + b;
+                    console.log('Converted to hex:', hexColor);
+                    return hexColor;
+                }
+            }
+        }
+        
+        // Also check PolyStyle
+        const polyStyle = style.getElementsByTagName('PolyStyle')[0];
+        if (polyStyle) {
+            const colorElement = polyStyle.getElementsByTagName('color')[0];
+            if (colorElement) {
+                const kmlColor = colorElement.textContent.trim();
+                console.log('Found PolyStyle color:', kmlColor);
+                if (kmlColor.length === 8) {
+                    const r = kmlColor.substring(6, 8);
+                    const g = kmlColor.substring(4, 6);
+                    const b = kmlColor.substring(2, 4);
+                    const hexColor = '#' + r + g + b;
+                    console.log('Converted to hex:', hexColor);
+                    return hexColor;
+                }
+            }
+        }
+    }
+    
+    // Method 2: Check if toGeoJSON added color to properties
+    if (uploadedGeoJSON && uploadedGeoJSON.features && uploadedGeoJSON.features.length > 0) {
+        const firstFeature = uploadedGeoJSON.features[0];
+        console.log('First feature properties:', firstFeature.properties);
+        
+        if (firstFeature.properties) {
+            // Check various color property names
+            const colorProps = ['stroke', 'stroke-color', 'color', 'fill'];
+            for (let prop of colorProps) {
+                if (firstFeature.properties[prop]) {
+                    console.log(`Found color in ${prop}:`, firstFeature.properties[prop]);
+                    return firstFeature.properties[prop];
+                }
+            }
+        }
+    }
+    
+    console.log('No color found, using default #0080ff');
+    return '#0080ff';
+}
 
 // Extract color from KML if available
 const defaultColor = extractColorFromKML(kml);
