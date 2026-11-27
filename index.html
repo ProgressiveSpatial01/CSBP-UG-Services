@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>CSBP Underground Services</title>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+
+    <!-- Mapbox GL JS and the geocoder plugin, from the CDN: this site is
+         static GitHub Pages with no build step, so mapboxgl and
+         MapboxGeocoder are globals the modules in src/ use directly. -->
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.1/mapbox-gl.css" rel="stylesheet" />
+    <script src="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://api.mapbox.com/mapbox-gl-js/plugins/mapbox-gl-geocoder/v5.0.0/mapbox-gl-geocoder.css"
+      type="text/css"
+    />
+
+    <link rel="stylesheet" href="css/map.css" />
+    <link rel="stylesheet" href="css/controls.css" />
+  </head>
+  <body>
+    <div id="map"></div>
+
+    <button id="layer-toggle" type="button" aria-label="Hide map controls" aria-expanded="true">
+      ✕
+    </button>
+
+    <div id="layer-control">
+      <h3>🗺️ Map Controls</h3>
+
+      <div class="control-section">
+        <button class="section-header" type="button" data-section="layers" aria-expanded="true">
+          <span><span class="icon" aria-hidden="true">📋</span><span>Layers</span></span>
+          <span class="toggle-arrow" aria-hidden="true">▼</span>
+        </button>
+        <div class="section-content" id="layers-content">
+          <div id="layer-list"></div>
+        </div>
+      </div>
+
+      <div class="control-section">
+        <button
+          class="section-header collapsed"
+          type="button"
+          data-section="upload"
+          aria-expanded="false"
+        >
+          <span><span class="icon" aria-hidden="true">📤</span><span>Upload Layers</span></span>
+          <span class="toggle-arrow" aria-hidden="true">▼</span>
+        </button>
+        <div class="section-content collapsed" id="upload-content">
+          <p class="muted">Add new service layers to the map</p>
+          <a class="button-link button-link-primary" href="upload.html">
+            Go to Upload Interface →
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div id="measure-control">
+      <div class="measure-buttons">
+        <button id="measure-distance" type="button" aria-pressed="false">Distance</button>
+        <button id="measure-area" type="button" aria-pressed="false">Area</button>
+      </div>
+      <button id="measure-clear" type="button" disabled>Clear</button>
+      <div id="measure-result" role="status" aria-live="polite"></div>
+    </div>
+
+    <script type="module" src="src/main.js"></script>
+  </body>
+</html>

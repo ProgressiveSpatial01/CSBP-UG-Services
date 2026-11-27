@@ -1,0 +1,200 @@
+/* map.css — page layout, the side panel shell, and popups.
+ *
+ * Shared by index.html and upload.html. Panel *contents* (layer tree,
+ * measure tool, upload form) live in controls.css.
+ *
+ * Replaces the inline <style> blocks the two pages used to carry, where
+ * #layer-control h3 was declared twice with conflicting rules and
+ * .section-content.collapsed was followed by a stray closing brace. */
+
+:root {
+  --brand: #0080ff;
+  --brand-dark: #0060cc;
+  --danger: #ff4444;
+  --danger-dark: #cc0000;
+  --text: #333;
+  --text-muted: #666;
+  --border: #e0e0e0;
+  --panel-width: 300px;
+  --font: Arial, Helvetica, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font);
+}
+
+#map {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+}
+
+/* ------------------------------------------------- side panel shell */
+
+#layer-control {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1;
+  width: var(--panel-width);
+  max-width: calc(100vw - 20px);
+  max-height: 85vh;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgb(0 0 0 / 30%);
+  font-size: 14px;
+  color: var(--text);
+  transition: transform 0.3s ease;
+}
+
+#layer-control.hidden {
+  transform: translateX(calc(-1 * (var(--panel-width) + 20px)));
+}
+
+#layer-control h3 {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0;
+  padding: 15px;
+  font-size: 16px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
+  border-bottom: 2px solid var(--brand-dark);
+  border-radius: 8px 8px 0 0;
+}
+
+.control-section {
+  border-bottom: 1px solid var(--border);
+}
+
+.control-section:last-child {
+  border-bottom: none;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 15px;
+  font: 600 14px var(--font);
+  color: var(--text);
+  text-align: left;
+  background: #f8f8f8;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.section-header:hover {
+  background: #efefef;
+}
+
+.section-header .icon {
+  margin-right: 8px;
+  font-size: 16px;
+}
+
+.section-header .toggle-arrow {
+  font-size: 12px;
+  color: var(--text-muted);
+  transition: transform 0.2s;
+}
+
+.section-header.collapsed .toggle-arrow {
+  transform: rotate(-90deg);
+}
+
+.section-content {
+  padding: 15px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.section-content.collapsed {
+  display: none;
+}
+
+/* The ☰ / ✕ button that slides the panel away. */
+#layer-toggle {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  padding: 10px;
+  font-size: 20px;
+  line-height: 1;
+  background: #fff;
+  border: none;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgb(0 0 0 / 30%);
+  cursor: pointer;
+  transition: left 0.3s ease;
+}
+
+#layer-toggle.panel-open {
+  left: var(--panel-width);
+}
+
+#layer-toggle:hover {
+  background: #f0f0f0;
+}
+
+/* ------------------------------------------------------------ popups */
+
+.mapboxgl-popup-content {
+  padding: 15px;
+  max-width: 300px;
+}
+
+.mapboxgl-popup-content h4 {
+  margin: 0 0 10px;
+  color: var(--brand);
+}
+
+.popup-row {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 10px;
+  margin: 5px 0;
+}
+
+.popup-label {
+  font-weight: bold;
+  color: var(--text-muted);
+}
+
+.popup-value {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.popup-empty,
+.muted {
+  margin: 0;
+  font-size: 12px;
+  color: #999;
+}
+
+/* ------------------------------------------------ narrower displays */
+
+/* Tablet widths: the panel keeps its own scroll but gives the map more
+ * room, and the measure control stops competing with the scale bar. */
+@media (max-width: 900px) {
+  :root {
+    --panel-width: 260px;
+  }
+
+  #layer-control {
+    max-height: 70vh;
+  }
+
+  .section-content {
+    max-height: 320px;
+  }
+}
